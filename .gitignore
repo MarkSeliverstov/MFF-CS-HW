@@ -1,0 +1,8 @@
+# Nezarska.Net
+Examples/
+Example_InAndOut/
+bin/
+.vscode/
+obj/
+Book_shop.csproj
+.DS_Store

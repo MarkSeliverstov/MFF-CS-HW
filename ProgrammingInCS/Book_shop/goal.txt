@@ -1,0 +1,26 @@
+The goal is to implement the core of the Nežárka.NET online bookstore - your application will be used as the service backend on the webserver side. After starting, the application uses standard input to receive the textual representation of the e-shop data (essentially relational database entities) in the following format (each data record on a separate line, with its members separated by 1 semicolon; first element on each line denotes either the data record type, or the beginning/end of the input data):
+
+DATA-BEGIN
+BOOK;_BookId_;_BookTitle_;_BookAuthor_;_BookPrice_
+CUSTOMER;_CustId_;_CustName_;_CustSurname_
+CART-ITEM;_CustId_;_BookId_;_BookCount_
+DATA-END
+
+A basic data model representing the described entities in a C# program can be downloaded from here: NezarkaModel.cs
+
+Nežárka.NET implementation must support the following 5 types of commands:
+
+GET _CustId_ http://www.nezarka.net/Books
+GET _CustId_ http://www.nezarka.net/Books/Detail/_BookId_
+GET _CustId_ http://www.nezarka.net/ShoppingCart
+GET _CustId_ http://www.nezarka.net/ShoppingCart/Add/_BookId_
+GET _CustId_ http://www.nezarka.net/ShoppingCart/Remove/_BookId_
+
+The commands carry the following meaning:
+
+/Books - no data changes, shows BooksListing
+/Books/Detail/_BookId_ - no data changes, shows BookInfo for the book associated with BookId
+/ShoppingCart - no data changes, shows CartContents for the current customer (specified by CustId)
+/ShoppingCart/Add/_BookId_ - adds 1 piece of the book associated with BookId to the shopping cart of the current customer (specified by CustId); if the book is already in the cart, its quantity is increased by one; shows CartContents
+/ShoppingCart/Remove/_BookId_ - removes 1 piece of the book associated with BookId from the shopping cart (decreasing its quantity by 1) of the current customer (specified by CustId); if only a single copy of the book was present, the entire record is removed; shows CartContents
+If any aspect of the request is invalid (e.g. a different command than GET, wrong request format, invalid customer number, invalid book number, removing a book not present in the cart, etc.), InvalidRequest should be shown.
