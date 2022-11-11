@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Globalization;
 
 namespace Huffman
 {
@@ -23,26 +23,31 @@ namespace Huffman
     }
 
     class Reader{
-        private TextReader r;
+        private TextReader r {get; set;}
 
         public Reader(TextReader reader){
             this.r = reader;
         }
 
-        public int? ReadChar(){
+        public int? ReadByte(){
             return r.Read();
         }
 
     }
 
     class Writer{   
-        private TextWriter w;
+        private TextWriter w {get; set;}
 
         public Writer(TextWriter writer){
             this.w = writer;
         }
 
-        public static void WriteTree(BinaryTree tree){
+
+        public static void Rec_WriteTree(Node root){
+            if (root.Left != null)
+                Rec_WriteTree(root.Left);
+            if (root.Right != null)
+                Rec_WriteTree(root.Right);
             
         }
     }
@@ -65,7 +70,7 @@ namespace Huffman
                 List<BinaryTree> forest = CreateForest(r);
                 if (forest == null) return;
                 BinaryTree tree = CreateHuffmanTree(forest);
-                Writer.WriteTree(tree);
+                Writer.Rec_WriteTree(tree.root);
             }
             catch(FileNotFoundException){
                 Console.WriteLine("File Error");
@@ -73,7 +78,7 @@ namespace Huffman
         }   
 
         public static List<BinaryTree> CreateForest(TextReader r){
-            List<BinaryTree> forest = new();
+            List<BinaryTree> forest = new List<BinaryTree>();
             Dictionary<int, int> WeightCharsInText = new();
             int ch;
 
@@ -92,9 +97,6 @@ namespace Huffman
                 forest.Add(SinglNodeTree);
             }
 
-            // Sorted forest
-            forest = forest.OrderBy(v => v.root.value).ToList();
-
             return forest;
         }
 
@@ -112,7 +114,7 @@ namespace Huffman
                     secondMin.root.order++ : firstMin.root.order++;
                 
                 int newValue = firstValue + secondValue;
-                BinaryTree newTree;
+                BinaryTree newTree = null;
                 if (firstValue == secondValue){
                     if (firstMin.root.ch == null && secondMin.root.ch == null){
                         newTree = firstMin.root.ch < secondMin.root.ch ? 
@@ -136,8 +138,8 @@ namespace Huffman
                     newTree = firstValue < secondValue ? 
                         new BinaryTree(newValue, null, order, firstMin.root, secondMin.root) :
                         new BinaryTree(newValue, null, order, secondMin.root, firstMin.root);
-
                 }
+                forest.Add(newTree);
 
             }
             return forest[0];
