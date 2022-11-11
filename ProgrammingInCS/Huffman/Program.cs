@@ -1,24 +1,31 @@
 ﻿using System;
-using System.Globalization;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Huffman
 {
     class Node{
-        public int value;
-        public decimal? ch;
         public decimal order;
-        public Node? Left, Right;
+        public decimal value;
+        public decimal? ch;
+        public Node? Left;
+        public Node? Right;
+
+        public Node(decimal value, decimal? ch, decimal order, Node? Left, Node? Right){
+            this.Left = Left;
+            this.Right = Right;
+            this.value = value;
+            this.ch = ch;
+            this.order = order;
+        }
     }
 
     class BinaryTree{
         public Node root;
 
-        public BinaryTree(int value, decimal? ch, decimal order, Node Left, Node Right){
-            this.root.Left = Left;
-            this.root.Right = Right;
-            this.root.value = value;
-            this.root.ch = ch;
-            this.root.order = order;
+        public BinaryTree(decimal value, decimal? ch, decimal order, Node? Left, Node? Right){
+            root = new Node(value, ch, order, Left, Right);
         }
     }
 
@@ -36,19 +43,15 @@ namespace Huffman
     }
 
     class Writer{   
-        private TextWriter w {get; set;}
-
-        public Writer(TextWriter writer){
-            this.w = writer;
-        }
-
-
-        public static void Rec_WriteTree(Node root){
-            if (root.Left != null)
-                Rec_WriteTree(root.Left);
-            if (root.Right != null)
-                Rec_WriteTree(root.Right);
-            
+        public static void Rec_WriteTree(Node root, TextWriter writer){
+            if (root.Right == null && root.Left == null)
+                writer.Write("*{0}:{1} ", root.ch, root.value);
+            else{
+                writer.Write(root.value + " ");
+                Rec_WriteTree(root.Left, writer);
+                Rec_WriteTree(root.Right, writer);
+            }
+            return;
         }
     }
 
@@ -60,17 +63,18 @@ namespace Huffman
             // }
             // string fName = args[0];
 
-            string fName = "huffman-data/simpl.in";
+            string fName = "huffman-data/simple2.in";
             try{
                 TextReader r = new StreamReader(fName);
                 TextWriter w = new StreamWriter("result.out");
-                Reader reader = new Reader(r);
-                Writer writer = new Writer(w);
 
                 List<BinaryTree> forest = CreateForest(r);
-                if (forest == null) return;
+                if (forest.Count == 0) return;
+
                 BinaryTree tree = CreateHuffmanTree(forest);
-                Writer.Rec_WriteTree(tree.root);
+                Writer.Rec_WriteTree(tree.root, w);
+
+                w.Close();
             }
             catch(FileNotFoundException){
                 Console.WriteLine("File Error");
@@ -83,14 +87,13 @@ namespace Huffman
             int ch;
 
             // Create Dict
-            while ((ch = r.Read()) != null)
+            while ((ch = r.Read()) != -1)
             {
                 WeightCharsInText[ch] = WeightCharsInText.ContainsKey(ch) ? 
-                    WeightCharsInText[ch]++ : WeightCharsInText[ch] = 1;
+                    WeightCharsInText[ch]+1 : WeightCharsInText[ch] = 1;
             }
 
-            if (forest.Count() == 0) return null;
-
+            if (WeightCharsInText.Count == 0) return forest;
             // Create forest
             foreach (var item in WeightCharsInText){
                 BinaryTree SinglNodeTree = new BinaryTree(item.Value, item.Key, 0, null, null);
@@ -101,19 +104,19 @@ namespace Huffman
         }
 
         public static BinaryTree CreateHuffmanTree(List<BinaryTree> forest){
-            while (forest.Count() != 1){
-                BinaryTree firstMin = forest.MinBy(x => x.root.value);
-                int firstValue = firstMin.root.value;
+            while (forest.Count != 1){
+                BinaryTree firstMin = FindMin(forest);
+                decimal firstValue = firstMin.root.value;
                 forest.Remove(firstMin);
 
-                BinaryTree secondMin = forest.MinBy(x => x.root.value);
-                int secondValue = secondMin.root.value;
+                BinaryTree secondMin = FindMin(forest);
+                decimal secondValue = secondMin.root.value;
                 forest.Remove(secondMin);
 
                 decimal order = firstMin.root.order < secondMin.root.order ?
-                    secondMin.root.order++ : firstMin.root.order++;
+                    secondMin.root.order+1 : firstMin.root.order+1;
                 
-                int newValue = firstValue + secondValue;
+                decimal newValue = firstValue + secondValue;
                 BinaryTree newTree = null;
                 if (firstValue == secondValue){
                     if (firstMin.root.ch == null && secondMin.root.ch == null){
@@ -121,11 +124,11 @@ namespace Huffman
                             new BinaryTree(newValue, null, order, firstMin.root, secondMin.root) :
                             new BinaryTree(newValue, null, order, secondMin.root, firstMin.root);
                     }
-                    else if (firstMin.root.ch == null){
-                        new BinaryTree(newValue, null, order, firstMin.root, secondMin.root);
+                    else if (firstMin.root.ch != null){
+                        newTree = new BinaryTree(newValue, null, order, firstMin.root, secondMin.root);
                     }
-                    else if (secondMin.root.ch == null){
-                        new BinaryTree(newValue, null, order, secondMin.root, firstMin.root);
+                    else if (secondMin.root.ch != null){
+                        newTree = new BinaryTree(newValue, null, order, secondMin.root, firstMin.root);
                     }
                     else{
                         newTree = firstMin.root.order < secondMin.root.order ? 
@@ -143,6 +146,15 @@ namespace Huffman
 
             }
             return forest[0];
+        }
+
+        public static BinaryTree FindMin(List<BinaryTree> forest){
+            BinaryTree minValueTree= forest[0];
+            foreach (var tree in forest){
+                if (tree.root.value < minValueTree.root.value)
+                    minValueTree = tree;
+            }
+            return minValueTree;
         }
     }
 }
