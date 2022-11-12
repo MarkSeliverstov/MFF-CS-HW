@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Huffman
 {
@@ -86,22 +87,17 @@ namespace Huffman
 
             try{
                 FileStream fs = new FileStream(fName, FileMode.Open);
-                BinaryReader r = new BinaryReader(fs);
+                BinaryReader r = new BinaryReader(fs, Encoding.ASCII);
                 TextWriter w = Console.Out;
                 //TextWriter w = new StreamWriter("result.out");
 
                 List<BinaryTree> forest = CreateForest(r);
                 if (forest.Count == 0) return;
-
                 BinaryTree tree = CreateHuffmanTree(forest);
                 Writer.Rec_WriteTree(tree.root, w);
-
                 w.Close();
             }
             catch(FileNotFoundException){
-                Console.WriteLine("File Error");
-            }
-            catch(System.UnauthorizedAccessException){
                 Console.WriteLine("File Error");
             }
         }   
@@ -109,16 +105,23 @@ namespace Huffman
         public static List<BinaryTree> CreateForest(BinaryReader r){
             List<BinaryTree> forest = new List<BinaryTree>();
             Dictionary<char, int> WeightCharsInText = new();
-            char ch;
+            byte oneByte;
 
             // Create Dict
-            while (r.PeekChar() > -1)
-            {
-                ch = r.ReadChar();
-                WeightCharsInText[ch] = WeightCharsInText.ContainsKey(ch) ? 
-                    WeightCharsInText[ch]+1 : WeightCharsInText[ch] = 1;
-            }
+            try{
+                while (true)
+                {
+                    oneByte = r.ReadByte();
 
+                    char ch = (char) oneByte;
+
+                    WeightCharsInText[ch] = WeightCharsInText.ContainsKey(ch) ? 
+                        WeightCharsInText[ch]+1 : WeightCharsInText[ch] = 1;
+                }
+            }
+            catch(EndOfStreamException){
+            }
+            
             if (WeightCharsInText.Count == 0) return forest;
             // Create forest
             foreach (var item in WeightCharsInText){
