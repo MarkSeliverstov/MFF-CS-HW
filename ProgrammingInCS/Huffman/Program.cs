@@ -78,7 +78,6 @@ namespace Huffman
 
     class Program{
         public static void Main(string[] args){ 
-            //args = new string[1]{"huffman-data/simple2.in"};
             if(args.Length != 1){
                 Console.WriteLine("Argument Error");
                 return;
@@ -89,7 +88,6 @@ namespace Huffman
                 FileStream fs = new FileStream(fName, FileMode.Open);
                 BinaryReader r = new BinaryReader(fs, Encoding.ASCII);
                 TextWriter w = Console.Out;
-                //TextWriter w = new StreamWriter("result.out");
 
                 List<BinaryTree> forest = CreateForest(r);
                 if (forest.Count == 0) return;
