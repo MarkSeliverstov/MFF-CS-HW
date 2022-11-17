@@ -1,5 +1,5 @@
 <?php
-
+date_default_timezone_set('UTC');
 require_once(__DIR__ . '/recodex_lib.php');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     // validate email
     if (isset($_POST['email']) && 
         !empty($_POST['email']) && 
-        filter_var($email, FILTER_VALIDATE_EMAIL) &&
+        filter_var($_POST['email'], FILTER_VALIDATE_EMAIL) &&
         mb_strlen($_POST['email']) < 200
         ){
         $email = $_POST['email'];
@@ -57,11 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     // validate unboxDay
     if (isset($_POST['unboxDay']) && 
-        filter_var($num, FILTER_VALIDATE_INT) && (
-        $_POST['unboxDay'] === 24 ||
-        $_POST['unboxDay'] === 25
+        filter_var($_POST['unboxDay'], FILTER_VALIDATE_INT) && (
+        $_POST['unboxDay'] === '24' ||
+        $_POST['unboxDay'] === '25'
     )){
-        $unboxDay = $_POST['unboxDay'];
+        $unboxDay = (int) $_POST['unboxDay'];
     }
     else{
         $invalidFields[] = 'unboxDay';
@@ -70,20 +70,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     // validate fromTime and toTime             TODO:
     $fromTime = null;
     $toTime = null;
+    $date_sec = 0;
+    $pattern_time = '/^[0-9]{1,2}:[0-9]{2}$/';
     if (isset($_POST['fromTime'])){
-
+        if(preg_match($pattern_time, $_POST['fromTime'])){
+            $date_sec = strtotime($_POST['fromTime'], 0);
+            $fromTime = floor($date_sec/60);
+        }
+        else{
+            $invalidFields[] = 'fromTime';
+        }
     }
     else{
         $invalidFields[] = 'fromTime';
     }
-    if (isset($_POST['toTime'])){
 
+    if (isset($_POST['toTime'])){
+        if(preg_match($pattern_time, $_POST['toTime'])){
+            $date_sec = strtotime($_POST['toTime'], 0);
+            $toTime = floor($date_sec/60);
+        }
+        else{
+            $invalidFields[] = 'fromTime';
+        }
     }
     else{
         $invalidFields[] = 'toTime';
     }
 
     //validate gifts
+    // FFFIIIIXXXX
     $gifts = [];
     $giftCustom = null;
     if (isset($_POST['gifts[]'])){
@@ -105,9 +121,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         }
     }
 
-
-
-
     if (!empty($invalidFields))
         recodex_survey_error($message, $invalidFields);
     else{
@@ -125,6 +138,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     }
     header('index.php', false, 302);
 }
-if ($_SERVER['REQUEST_METHOD'] == 'GET'){
-    require __DIR__ . '/form_template.html';
-}
+require __DIR__ . '/form_template.html';
+
