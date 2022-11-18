@@ -166,11 +166,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             $giftCustom,
         );
     }
-    //header('Location: index.php', false, 302);
+    
     $host  = $_SERVER['HTTP_HOST'];
     $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $extra = 'index.php';
     header("Location: http://$host$uri/$extra", false, 302);
 }
 require __DIR__ . '/form_template.html';
-
