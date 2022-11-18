@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     // validate firstname
     if (isset($_POST['firstName']) && 
         !empty($_POST['firstName']) && 
-        mb_strlen($_POST['firstName']) < 100
+        mb_strlen($_POST['firstName']) <= 100
         ){
         $firstName = $_POST['firstName'];
     }
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     // validate lasttname
     if (isset($_POST['lastName']) && 
         !empty($_POST['lastName']) &&
-        mb_strlen($_POST['lastName']) < 100
+        mb_strlen($_POST['lastName']) <= 100
         ){
         $lastName = $_POST['lastName'];
     }
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     if (isset($_POST['email']) && 
         !empty($_POST['email']) && 
         filter_var($_POST['email'], FILTER_VALIDATE_EMAIL) &&
-        mb_strlen($_POST['email']) < 200
+        mb_strlen($_POST['email']) <= 200
         ){
         $email = $_POST['email'];
     }
@@ -67,57 +67,87 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         $invalidFields[] = 'unboxDay';
     }
     
-    // validate fromTime and toTime             TODO:
+    // validate fromTime and toTime 
     $fromTime = null;
     $toTime = null;
     $date_sec = 0;
-    $pattern_time = '/^[0-9]{1,2}:[0-9]{2}$/';
+    $pattern_time = '/^[0-2]?[0-9]:[0-5][0-9]$/';
+
     if (isset($_POST['fromTime'])){
-        if(preg_match($pattern_time, $_POST['fromTime'])){
-            $date_sec = strtotime($_POST['fromTime'], 0);
-            $fromTime = floor($date_sec/60);
-        }
-        else{
-            $invalidFields[] = 'fromTime';
+        if ($_POST['fromTime'] != null){
+            if (preg_match($pattern_time, $_POST['fromTime'])){
+                $H = strtok($_POST['fromTime'], ':');
+                if ((int)$H > 24){
+                    $invalidFields[] = 'fromTime';
+                }
+                else{
+                    $date_sec = strtotime($_POST['fromTime'], 0);
+                    $fromTime = floor($date_sec/60);
+                }
+            }
+            else{
+                $invalidFields[] = 'fromTime';
+            }
         }
     }
     else{
         $invalidFields[] = 'fromTime';
     }
 
+
     if (isset($_POST['toTime'])){
-        if(preg_match($pattern_time, $_POST['toTime'])){
-            $date_sec = strtotime($_POST['toTime'], 0);
-            $toTime = floor($date_sec/60);
-        }
-        else{
-            $invalidFields[] = 'fromTime';
+        if ($_POST['toTime'] != null){
+            if (preg_match($pattern_time, $_POST['toTime'])){
+                $H = strtok($_POST['toTime'], ':');
+                if ((int)$H > 24){
+                    $invalidFields[] = 'toTime';
+                }
+                else{
+                    $date_sec = strtotime($_POST['toTime'], 0);
+                    $toTime = floor($date_sec/60);
+                }
+            }
+            else{
+                $invalidFields[] = 'toTime';
+            }
         }
     }
     else{
         $invalidFields[] = 'toTime';
     }
 
+
     //validate gifts
-    // FFFIIIIXXXX
     $gifts = [];
     $giftCustom = null;
-    if (isset($_POST['gifts[]'])){
-        if (in_array('socks', $_POST['gifts[]']) ||
-            in_array('points', $_POST['gifts[]']) ||
-            in_array('jarnik', $_POST['gifts[]']) ||
-            in_array('cash', $_POST['gifts[]']) ||
-            in_array('teddy', $_POST['gifts[]'])
-            ){
-            $gifts = $_POST['gifts[]'];
+    if (isset($_POST['gifts'])){
+        if (!empty($_POST['gifts'])){
+            foreach ($_POST['gifts'] as $gift){
+                if ($gift != 'socks' &&
+                    $gift != 'points' &&
+                    $gift != 'jarnik' &&
+                    $gift != 'cash' &&
+                    $gift != 'teddy' &&
+                    $gift != 'other'
+                ){
+                    $invalidFields[] = 'gifts';
+                    break;
+                }
+            }
+            $gifts = $_POST['gifts'];
         }
-        if (in_array('other', $_POST['gifts[]']) && 
-            !empty($_POST['gifts[]']['other'])
-        ){
-            $giftCustom = $_POST['gifts[]']['other'];
-        }
-        else{
-            $invalidFields[] = 'gifts[]';
+        if (in_array('other', $_POST['gifts'])){
+            if (isset($_POST['giftCustom'])){
+                if (!empty($_POST['giftCustom']) && mb_strlen($_POST['giftCustom']) <= 100){
+                    $giftCustom = $_POST['giftCustom'];
+                }
+                else{
+                    $invalidFields[] = 'giftCustom';
+                }
+            }
+            else{
+                $invalidFields[] = 'giftCustom';
+            }
         }
     }
 
@@ -136,7 +166,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             $giftCustom,
         );
     }
-    header('index.php', false, 302);
+    //header('Location: index.php', false, 302);
+    $host  = $_SERVER['HTTP_HOST'];
+    $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+    $extra = 'index.php';
+    header("Location: http://$host$uri/$extra", false, 302);
 }
 require __DIR__ . '/form_template.html';
 
