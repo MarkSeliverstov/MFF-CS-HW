@@ -74,11 +74,37 @@ namespace Huffman
             }
             return;
         }
+
+        public static void Bin_Rec_WriteTree(Node root, BinaryWriter writer){
+            if (root.Right == null && root.Left == null){
+                WriteLeaf(root.value, root.ch);
+                return;
+            }
+            WriteInner(root.value);
+            if (root.Right != null && root.Left != null){
+                Bin_Rec_WriteTree(root.Left, writer);
+                Bin_Rec_WriteTree(root.Right, writer);
+            }
+            return;
+        }
+
+        public static void WriteLeaf(decimal value, decimal? ch){
+
+        }
+
+        public static void WriteInner(decimal value){
+
+        }
+
+        public static void Bin_WriteHeader(BinaryWriter writer){
+            byte[] header = new byte[]{0x7B,0x68,0x75,0x7C,0x6D,0x7D,0x66,0x66};
+            writer.Write(header);
+            return;
+        }
     }
 
     class Program{
         public static void Main(string[] args){ 
-            args = new string[1]{"huffman-data/binary.in"};
             if(args.Length != 1){
                 Console.WriteLine("Argument Error");
                 return;
@@ -86,14 +112,17 @@ namespace Huffman
             string fName = args[0];
 
             try{
-                FileStream fs = new FileStream(fName, FileMode.Open);
-                BinaryReader r = new BinaryReader(fs, Encoding.ASCII);
-                TextWriter w = Console.Out;
+                FileStream fIn = new FileStream(fName, FileMode.Open);
+                BinaryReader r = new BinaryReader(fIn, Encoding.ASCII);
+                FileStream fOut = new FileStream(fName+".huff", FileMode.CreateNew);
+                BinaryWriter w = new BinaryWriter(fOut, Encoding.ASCII);
 
                 List<BinaryTree> forest = CreateForest(r);
                 if (forest.Count == 0) return;
                 BinaryTree tree = CreateHuffmanTree(forest);
-                Writer.Rec_WriteTree(tree.root, w);
+                Writer.Bin_WriteHeader(w);
+                Writer.Bin_Rec_WriteTree(tree.root, w);
+                Writer.Bin_WriteEncodedData(w);
                 w.Close();
             }
             catch(FileNotFoundException){
