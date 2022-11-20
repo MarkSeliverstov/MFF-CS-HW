@@ -1,4 +1,4 @@
-# Huffman tree - 2(+encoding to a binary file)
+# Huffman tree #2(+encoding to a binary file)
 
 ### The first version is [here](https://github.com/MarkSeliverstov/HW_Uni/tree/main/ProgrammingInCS/Huffman)
 
@@ -32,19 +32,22 @@ The encoding works as follows. Each character in input file is encoded as a bit 
 
 For example, the sequence 1101 0010 0001 1010 111 (spaces are used only for increased readability) will be encoded into three bytes: 0x4B 0x58 0x07.
 
-**Example:**
+---
+
+## Example:
+
 Assume that we already have a Huffman tree which generates the following codes for characters A, B, C, D (used only for illustrative purposes, the tree shape does not correspond to real frequencies):
 
-A: 0
-B: 11
-C: 100
-D: 101
+A: 0 <br>
+B: 11 <br>
+C: 100 <br>
+D: 101 <br>
 
-Then the following input sequence (i.e. the contents of the input file): BDAACB
-will be converted to this bit sequence (bit stream): 1110 1001 0011
-which will be stored as the following bytes: 0x97 0x0C
-i.e. whereas the size of the input file is 6 bytes, the size of the encoded data will be only 2 bytes.
+Then the following input sequence (i.e. the contents of the input file): BDAACB <br>
+will be converted to this bit sequence (bit stream): 1110 1001 0011 <br>
+which will be stored as the following bytes: 0x97 0x0C <br>
+i.e. whereas the size of the input file is 6 bytes, the size of the encoded data will be only 2 bytes. <br>
 
-Caution: the following (and different) character sequence: BDAACBAA
-will be encoded as a different bit sequence: 1110 1001 0011 00
+Caution: the following (and different) character sequence: BDAACBAA <br>
+will be encoded as a different bit sequence: 1110 1001 0011 00 <br>
 but due to the addition of zero bits will result in the same bytes as with the previous example: 0x97 0x0C
