@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,13 +9,13 @@ namespace Huffman
 {
     #nullable enable
     class Node{
-        public decimal order;
-        public decimal value;
-        public decimal? ch;
+        public int order;
+        public Int32 value;
+        public byte? ch;
         public Node? Left;
         public Node? Right;
 
-        public Node(decimal value, decimal? ch, decimal order, Node? Left, Node? Right){
+        public Node(Int32 value, byte? ch, int order, Node? Left, Node? Right){
             this.Left = Left;
             this.Right = Right;
             this.value = value;
@@ -43,7 +44,7 @@ namespace Huffman
     class BinaryTree{
         public Node root;
 
-        public BinaryTree(decimal value, decimal? ch, decimal order, Node? Left, Node? Right){
+        public BinaryTree(Int32 value, byte? ch, int order, Node? Left, Node? Right){
             root = new Node(value, ch, order, Left, Right);
         }
     }
@@ -62,25 +63,13 @@ namespace Huffman
     }
 
     class Writer{   
-        public static void Rec_WriteTree(Node root, TextWriter writer){
-            if (root.Right == null && root.Left == null){
-                writer.Write("*{0}:{1} ", root.ch, root.value);
-                return;
-            }
-            writer.Write(root.value + " ");
-            if (root.Right != null && root.Left != null){
-                Rec_WriteTree(root.Left, writer);
-                Rec_WriteTree(root.Right, writer);
-            }
-            return;
-        }
 
         public static void Bin_Rec_WriteTree(Node root, BinaryWriter writer){
             if (root.Right == null && root.Left == null){
-                WriteLeaf(root.value, root.ch);
+                WriteLeaf(root.value, root.ch, writer);
                 return;
             }
-            WriteInner(root.value);
+            WriteInner(root.value, writer);
             if (root.Right != null && root.Left != null){
                 Bin_Rec_WriteTree(root.Left, writer);
                 Bin_Rec_WriteTree(root.Right, writer);
@@ -88,17 +77,78 @@ namespace Huffman
             return;
         }
 
-        public static void WriteLeaf(decimal value, decimal? ch){
-
+        private static void WriteLeaf(Int32 value, byte? ch, BinaryWriter w){
+            byte[] zeroEnd = {0x00, 0x00, 0x00};
+            w.Write(value*2+1);
+            w.Write(zeroEnd);
+            if (ch != null){
+                w.Write((byte)ch);
+            }
         }
 
-        public static void WriteInner(decimal value){
+        private static void WriteInner(Int32 value, BinaryWriter w){
+            byte[] zeroEnd = {0x00, 0x00, 0x00, 0x00};
+            w.Write(value*2);
+            w.Write(zeroEnd);
+        }
+
+        public static void  WriteEmptyBytes(BinaryWriter w){
+            byte[] empty = new byte[8]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+            w.Write(empty);
 
         }
 
         public static void Bin_WriteHeader(BinaryWriter writer){
             byte[] header = new byte[]{0x7B,0x68,0x75,0x7C,0x6D,0x7D,0x66,0x66};
             writer.Write(header);
+        }
+
+        public static void Bin_WriteEncodedData(
+                                BinaryWriter w,  
+                                BinaryReader r,
+                                Dictionary<byte?, string> dict){
+            Byte oneByte;
+            string bitesFromFile = "";
+            try{
+                while (true)
+                {
+                    oneByte = r.ReadByte();
+                    bitesFromFile += dict[oneByte];
+                    while (bitesFromFile.Length > 8){
+                        string byteToFile = bitesFromFile.Substring(0, 8);
+                        WriteStringByte(byteToFile, w);
+                        bitesFromFile = bitesFromFile.Substring(8, bitesFromFile.Length - 8);
+                    }
+                }
+            }
+            catch(EndOfStreamException){
+            }
+            if(bitesFromFile != ""){
+                WriteStringByte(bitesFromFile, w);
+            }
+        }
+
+        private static void WriteStringByte(string byteToFile, BinaryWriter w){
+            byte result = 0;
+            for(byte i=0, m = 1; i<byteToFile.Length; i++, m *= 2){
+                result += byteToFile[i] == '1' ? m : (byte)0;
+            }
+
+            w.Write(result);
+        }
+    }
+
+    class EncodingTree{
+        public static Dictionary<byte?, string> encodingDict = new();
+        public static void Encode(Node root, string code){
+            if (root.Right == null && root.Left == null){
+                encodingDict.Add((byte?)root.ch, code);
+                return;
+            }
+            if (root.Right != null && root.Left != null){
+                Encode(root.Left, code+"0");
+                Encode(root.Right, code+"1");
+            }
             return;
         }
     }
@@ -113,16 +163,21 @@ namespace Huffman
 
             try{
                 FileStream fIn = new FileStream(fName, FileMode.Open);
-                BinaryReader r = new BinaryReader(fIn, Encoding.ASCII);
+                BinaryReader r = new BinaryReader(fIn, Encoding.UTF8);
                 FileStream fOut = new FileStream(fName+".huff", FileMode.CreateNew);
-                BinaryWriter w = new BinaryWriter(fOut, Encoding.ASCII);
+                BinaryWriter w = new BinaryWriter(fOut, Encoding.UTF8);
 
                 List<BinaryTree> forest = CreateForest(r);
                 if (forest.Count == 0) return;
                 BinaryTree tree = CreateHuffmanTree(forest);
                 Writer.Bin_WriteHeader(w);
                 Writer.Bin_Rec_WriteTree(tree.root, w);
-                Writer.Bin_WriteEncodedData(w);
+                Writer.WriteEmptyBytes(w);
+                EncodingTree.Encode(tree.root, "");
+                r.Close();
+                fIn = new FileStream(fName, FileMode.Open);
+                r = new BinaryReader(fIn, Encoding.UTF8);
+                Writer.Bin_WriteEncodedData(w, r, EncodingTree.encodingDict);
                 w.Close();
             }
             catch(FileNotFoundException){
@@ -132,7 +187,7 @@ namespace Huffman
 
         public static List<BinaryTree> CreateForest(BinaryReader r){
             List<BinaryTree> forest = new List<BinaryTree>();
-            Dictionary<char, int> WeightCharsInText = new();
+            Dictionary<byte, int> WeightCharsInText = new();
             byte oneByte;
 
             // Create Dict
@@ -141,7 +196,7 @@ namespace Huffman
                 {
                     oneByte = r.ReadByte();
 
-                    char ch = (char) oneByte;
+                    byte ch = oneByte;
 
                     WeightCharsInText[ch] = WeightCharsInText.ContainsKey(ch) ? 
                         WeightCharsInText[ch]+1 : WeightCharsInText[ch] = 1;
@@ -161,7 +216,7 @@ namespace Huffman
         }
 
         public static BinaryTree CreateHuffmanTree(List<BinaryTree> forest){
-            decimal order = 0;
+            int order = 0;
             while (forest.Count != 1){
                 BinaryTree firstMin = FindMin(forest);
                 forest.Remove(firstMin);
@@ -169,7 +224,7 @@ namespace Huffman
                 forest.Remove(secondMin);
 
                 order++;
-                decimal newValue = firstMin.root.value + secondMin.root.value;
+                Int32 newValue = firstMin.root.value + secondMin.root.value;
 
                 BinaryTree newTree = firstMin.root.IsLessThan(secondMin.root) ?
                     new BinaryTree(newValue, null, order, firstMin.root, secondMin.root):
