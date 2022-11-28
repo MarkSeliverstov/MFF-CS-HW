@@ -1,8 +1,4 @@
-﻿
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
-
-namespace Excel
+﻿namespace Excel
 {
     class Cell{
         public Int32? value = null;
@@ -17,6 +13,14 @@ namespace Excel
         static string missOP = "#MISSOP";
         static string formulaErr = "#FORMULA";
 
+        private char? OperatorFrom(string str){
+            char[] operators = new char[]{'-', '+', '*', '/'};
+            foreach (char op in operators){
+                if (str.Contains(op)) return op;
+            }
+            return null;
+        }
+
         public Cell(string str){
             int value;
             if (int.TryParse(str, out value)){
@@ -30,34 +34,101 @@ namespace Excel
                 this.err = invalidData;
             }
             else{
-                if(Regex.IsMatch(str, pattern)) this.formula = new Formula(str);
-                else 
+                str = str.Substring(1);
+                char? op = OperatorFrom(str);
+                if (op == null) 
+                    this.err = missOP;
+                else{
+                    string[] coords = str.Split(Convert.ToChar(op));
+                    if (coords.Length != 2) 
+                        this.err = formulaErr;
+                    else{
+                        // A123 AA123 AA
+                        string[] cols = new string[2]{"",""};
+                        int[] rows = new int[2]{0,0};
+
+                        for(int k = 0; k<2; k++){
+                            if (!(coords[k][0] >= 65 && coords[k][0] <= 90) || 
+                                coords[k].Length < 2){
+                                this.err = formulaErr;
+                                return;
+                            }
+
+                            cols[k] += coords[k][0];
+
+                            int i  = 1;
+                            while (coords[k][i] >= 65 && coords[k][i] <= 90){
+                                if (!(coords[k][i] >= 65 && coords[k][i] <= 90)) break;
+                                if (i == coords[k].Length){
+                                    this.err = formulaErr;
+                                    return;
+                                }
+                                cols[k] += coords[k][i];
+                                i+=1;
+                            }
+
+                            if (!int.TryParse(coords[k].Substring(i), out rows[k])){
+                                this.err = formulaErr;
+                                return;
+                            }
+                        }
+
+                        this.formula = new Formula( (char)op,
+                                                    coords[0],
+                                                    coords[1],
+                                                    cols,
+                                                    rows
+                                                    );
+                    }
+                }
             }
             return;
         }
     }
 
     class Formula{
-        string firstOp;
-        string secondOp;
-        char operation;
-        int? result = null;
-        public Formula(string str){
+        public char op;
+        public string firstColRow;
+        public string secondColRow;
+        public Int32[] firstColRowInt = new Int32[2];
+        public Int32[] secondColRowInt = new Int32[2];
 
+        public Formula(char op, string firstColRow, string secondColRow, string[] cols, int[] rows){
+            this.op = op;
+            this.firstColRow = firstColRow;
+            this.secondColRow = secondColRow;
+            this.firstColRowInt[0] = ParseToInt(cols[0]);
+            this.secondColRowInt[0] = ParseToInt(cols[1]);
+            this.firstColRowInt[1] = rows[0];
+            this.secondColRowInt[1] = rows[1];
         }
-        public void GetResult(){
-            switch (this.operation)
+
+        private Int32 ParseToInt(string col){
+            Int32 value = 0;
+            for(int i=0; i<col.Length; i++){
+                value += (col[i] - 65+1) * (Int32)Math.Pow(25, col.Length-i-1);
+            }
+            return value;
+        }
+
+        public Int32 GetResult(Int32 first, Int32 second){
+            Int32 result = 0;
+            switch (this.op)
             {
                 case '+':
+                    result = first + second;
                     break;
                 case '-':
+                    result = first - second;
                     break;
                 case '*':
+                    result = first * second;
                     break;
                 case '/':
+                    result = first / second;
                     break;
             }
-            
+            return result;
         }
     }
 
@@ -69,6 +140,7 @@ namespace Excel
             while ((line = r.ReadLine()) != null){
                 if (line == null) break;
                 row = ParseToCells(line);
+                sheet.Add(row);
             }
             return sheet;
         }
@@ -89,8 +161,22 @@ namespace Excel
 
         }
 
-        private static List<Cell[]> EvaluatingSheet(List<Cell[]> sheet){
+        private static Int32[] GetValues(Cell cell){
 
+        }
+
+        private static Int32 GetResult(Cell cell){
+
+        }
+
+        private static List<Cell[]> EvaluatingSheet(List<Cell[]> sheet){
+            foreach (Cell[] row in sheet){
+                foreach (Cell cell in row){
+                    if (cell.formula != null){
+                        cell.value = GetResult(cell); // TODO: process every cells
+                    }
+                }
+            }
             return sheet;
         }
 
