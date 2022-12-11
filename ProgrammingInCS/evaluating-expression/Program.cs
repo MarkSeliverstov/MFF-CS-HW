@@ -14,10 +14,12 @@ namespace EvaluatingExpression{
     }
 
     enum Operator{
+        isNegative,
         Plus,
         Minus,
         Multiply,
-        Divide
+        Divide,
+        Undefined
     }
 
     enum Errors{
@@ -31,7 +33,6 @@ namespace EvaluatingExpression{
         public int? value;
         public Operator? op;
 
-        public Node? parent;
         public Node? left;
         public Node? right;
 
@@ -53,17 +54,99 @@ namespace EvaluatingExpression{
             if (expression.Length == 0)
                 error = Errors.InvalidFormat;
             else{
-                Node newRoot = TryLoadToTree(expression.Split(" ", StringSplitOptions.RemoveEmptyEntries));
-                if(error == null) this.root = newRoot; // if didn't get error
+                Node? newRoot = TryLoadToTree(expression.Split(" ", StringSplitOptions.RemoveEmptyEntries));
+
+                // if didn't get error
+                if(error == null && newRoot != null) 
+                    this.root = newRoot;
             }
             return;
         }
 
-        private Node TryLoadToTree(string[] expression){
-            // TODO: create tree with while
-            Node root;
+        private Operator GetOperation(string op){
+            switch (op){
+                case "~":
+                    return Operator.isNegative;
+                case "+":
+                    return Operator.Plus;
+                case "-":
+                    return Operator.Minus;
+                case "*":
+                    return Operator.Multiply;
+                case "/":
+                    return Operator.Divide;
+                default:
+                    return Operator.Undefined;
+            }
+        }
 
-            return null;
+        private Node? TryLoadToTree(string[] exp){
+            // TODO: create tree with while
+            Operator currentOp;
+            int i = 0;
+
+            // what we need
+            if (int.TryParse(exp[i], out int value)){
+                root = new Node(value);
+                root.isNegative = true;
+                return root;
+            }else{
+                currentOp = GetOperation(exp[i]);
+                if (currentOp == Operator.Undefined){
+                    error = Errors.InvalidFormat;
+                    return null;
+                }else{
+                    root = new Node(currentOp);
+                    root.isNegative = true;
+                }
+            }
+
+
+
+
+
+            // create root = first node
+            try {
+                if (GetOperation(exp[i]) == Operator.isNegative){
+                    i++;
+                    if (int.TryParse(exp[i], out int value)){
+                        root = new Node(value);
+                        root.isNegative = true;
+                        return root;
+                    }else{
+                        currentOp = GetOperation(exp[i]);
+                        if (currentOp == Operator.Undefined){
+                            error = Errors.InvalidFormat;
+                            return null;
+                        }else{
+                            root = new Node(currentOp);
+                            root.isNegative = true;
+                        }
+                    }
+                }
+                else if (int.TryParse(exp[i], out int value)){
+                    root = new Node(value);
+                    return root;
+                }else{
+                    currentOp = GetOperation(exp[i]);
+                    if (currentOp == Operator.Undefined){
+                        error = Errors.InvalidFormat;
+                        return null;
+                    }else{
+                        root = new Node(currentOp);
+                    }
+                }
+            }
+            catch (IndexOutOfRangeException){
+                error = Errors.InvalidFormat;
+                return null;
+            }
+
+            Node? node = root;
+            node.left = new Node(1);
+            node = node.left;
+
+            return root;
         }
 
         public void Recurcive_Evaluate(Node? root){
