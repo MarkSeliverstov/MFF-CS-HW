@@ -3,7 +3,7 @@ var solution = require('./solution.js');
 
 try {
 	const fileName = process.argv.pop();
-	const objs = JSON.parse(fs.readFileSync(fileName));
+	const objs = JSON.parse(fs.readFileSync('01-sample.in'));
 	const debug = process.argv.pop() === '--debug';
 
 	if (!Array.isArray(objs) || objs.length == 0) {
