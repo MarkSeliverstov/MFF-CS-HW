@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.VisualBasic;
 
 namespace EvaluatingExpression{
     class Program{
@@ -6,14 +7,10 @@ namespace EvaluatingExpression{
             TextReader reader = Console.In;
             TextWriter writer = Console.Out;
 
-            // Expression expression = new Expression(reader.ReadLine());
-            // Expression expression = new Expression("- - 2000000000 4000000000");
-            // expression.Recurcive_Evaluate(expression.root);
-            // writer.WriteLine(expression.result);
-            if (uint.TryParse("4000000000", out uint value)){
-                writer.WriteLine(value);
-            }
-            else writer.WriteLine("ERROR");
+            //Expression expression = new Expression(reader.ReadLine());
+            ExpressionTree expression = new ExpressionTree("~ ~ ~ 2 3");
+            expression.Recurcive_Evaluate(expression.root);
+            writer.WriteLine(expression.result);
         }
     }
 
@@ -32,38 +29,45 @@ namespace EvaluatingExpression{
         OverflowError
     }
 
-    abstract class Node{
+    abstract class Node{}
+
+    sealed class NodeInt: Node{
         public Node? left;
         public Node? right;
+        public int value;
+        public NodeInt(int value) => this.value = value;
     }
 
-    sealed class NodeVal: Node{
-        public int? value;
-        public NodeVal(int value) => this.value = value;
+    sealed class NodeBinOp: Node{
+        public Node? left;
+        public Node? right;
+        public Operator op;
+        public NodeBinOp(Operator op) => this.op = op;
     }
 
-    sealed class NodeOp: Node{
-        public Operator? op;
-        public NodeOp(Operator op) => this.op = op;
+    sealed class NodeUnarOp: Node{
+        public Node? next;
+        public Operator op;
+        public NodeUnarOp(Operator op) => this.op = op;
     }
 
-    class Expression{
-        public Node? root{get; private set;}
-        public Errors? error{get; private set;} // TODO: get to string
-        public int? result{get; private set;}
-        public string[] expression{get; private set;}
-        public int indexOfExp = 0;
+    class ExpressionTree{
+        public Node? root;
+        public Errors? error;
+        public int? result;
 
-        public Expression(string expression){
-            if (expression.Length == 0)
-                error = Errors.InvalidFormat;
+
+        public ExpressionTree(string expression){
+            Queue<string> tokens = new Queue<string>(expression.Split(" ", StringSplitOptions.RemoveEmptyEntries));
+
+            if (tokens.Count == 0)
+                this.error = Errors.InvalidFormat;
             else{
-                this.expression = expression.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                Node? newRoot = TryLoadToTree();
-
-                // if didn't get error
-                if(error == null && newRoot != null) 
-                    this.root = newRoot;
+                Node? node = LoadToTree_rec(tokens);
+                if (tokens.Count > 0)
+                    this.error = Errors.InvalidFormat;
+                else
+                    this.root = node;
             }
             return;
         }
@@ -71,7 +75,7 @@ namespace EvaluatingExpression{
         private Operator GetOperation(string op){
             switch (op){
                 case "~":
-                    return Operator.NextIsNegative;
+                    return Operator.NextIsNegativeInt;
                 case "+":
                     return Operator.Plus;
                 case "-":
@@ -84,55 +88,46 @@ namespace EvaluatingExpression{
                     return Operator.Undefined;
             }
         }
+        
+        private Node? LoadToTree_rec(Queue<string> tokens){
+            if (!tokens.TryDequeue(out string token)){
+                this.error  = Errors.InvalidFormat;
+                return null;
+            }
 
-        private (Node?, Errors?) ValidateToken(string token, bool isNeg = false){
-            Node node;
             if (uint.TryParse(token, out uint value)){
-                if (value > 2147483648)
-                    return (null, Errors.OverflowError);
-
-                node = new Node(Convert.ToInt32(value));
-                node.isNegative = isNeg;
-            }else{
-                Operator currentOp = GetOperation(token);
-                if (currentOp == Operator.Undefined)
-                    return (null, Errors.InvalidFormat);
-                else if (currentOp == Operator.NextIsNegative){
-                    
+                if (value < 2147483648){
+                    return new NodeInt(Convert.ToInt32(value));
                 }
                 else{
-                    node = new Node(currentOp);
-                    node.isNegative = isNeg;
+                    this.error = Errors.InvalidFormat;
+                    return null;
+                }
+            }  
+            else{
+                Operator currentOp = GetOperation(token);
+                if (currentOp == Operator.NextIsNegativeInt){
+                    NodeUnarOp node = new NodeUnarOp(currentOp);
+                    node.next = LoadToTree_rec(tokens);
+                    if (node.next == null)
+                        return null;
+                    else
+                        return node;
+                }
+                else if(currentOp != Operator.Undefined){
+                    NodeBinOp node = new NodeBinOp(currentOp);
+                    node.left = LoadToTree_rec(tokens);
+                    node.right = LoadToTree_rec(tokens);
+                    if (node.left == null || node.right == null)
+                        return null;
+                    else
+                        return node;
+                }
+                else{
+                    this.error = Errors.InvalidFormat;
+                    return null;
                 }
             }
-            return (node, null);
-        }
-
-        private Node? TryLoadToTree(Node? node = null){
-            
-            if (indexOfExp == 0){
-                
-            }
-            
-
-            Operator currentOp;
-            int i = 0;
-
-            // what we need
-
-            return root;
-        }
-
-        public void Recurcive_Evaluate(Node? root){
-            // TODO: evaluate tree fix
-            if (root.op != null)
-                Console.Write(root.op + " ");
-            else if (root.value != null){
-                if (root.isNegative) Console.Write("~ ");
-                Console.Write(root.value + " ");
-            }
-            if (root.left != null) Recurcive_Evaluate(root.left);
-            if (root.right != null) Recurcive_Evaluate(root.right);
         }
     }
 
