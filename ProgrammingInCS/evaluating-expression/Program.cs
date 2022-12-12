@@ -7,14 +7,18 @@ namespace EvaluatingExpression{
             TextWriter writer = Console.Out;
 
             // Expression expression = new Expression(reader.ReadLine());
-            Expression expression = new Expression("- - 2000000000 4000000000");
-            expression.Recurcive_Evaluate(expression.root);
-            writer.WriteLine(expression.result);
+            // Expression expression = new Expression("- - 2000000000 4000000000");
+            // expression.Recurcive_Evaluate(expression.root);
+            // writer.WriteLine(expression.result);
+            if (uint.TryParse("4000000000", out uint value)){
+                writer.WriteLine(value);
+            }
+            else writer.WriteLine("ERROR");
         }
     }
 
     enum Operator{
-        isNegative,
+        NextIsNegativeInt,
         Plus,
         Minus,
         Multiply,
@@ -28,33 +32,34 @@ namespace EvaluatingExpression{
         OverflowError
     }
 
-    class Node{
-        public bool isNegative = false;
-        public int? value;
-        public Operator? op;
-
+    abstract class Node{
         public Node? left;
         public Node? right;
+    }
 
-        public Node(int value){
-            this.value = value;
-        }
+    sealed class NodeVal: Node{
+        public int? value;
+        public NodeVal(int value) => this.value = value;
+    }
 
-        public Node(Operator op){
-            this.op = op;
-        }
+    sealed class NodeOp: Node{
+        public Operator? op;
+        public NodeOp(Operator op) => this.op = op;
     }
 
     class Expression{
         public Node? root{get; private set;}
         public Errors? error{get; private set;} // TODO: get to string
         public int? result{get; private set;}
+        public string[] expression{get; private set;}
+        public int indexOfExp = 0;
 
         public Expression(string expression){
             if (expression.Length == 0)
                 error = Errors.InvalidFormat;
             else{
-                Node? newRoot = TryLoadToTree(expression.Split(" ", StringSplitOptions.RemoveEmptyEntries));
+                this.expression = expression.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                Node? newRoot = TryLoadToTree();
 
                 // if didn't get error
                 if(error == null && newRoot != null) 
@@ -66,7 +71,7 @@ namespace EvaluatingExpression{
         private Operator GetOperation(string op){
             switch (op){
                 case "~":
-                    return Operator.isNegative;
+                    return Operator.NextIsNegative;
                 case "+":
                     return Operator.Plus;
                 case "-":
@@ -80,71 +85,40 @@ namespace EvaluatingExpression{
             }
         }
 
-        private Node? TryLoadToTree(string[] exp){
-            // TODO: create tree with while
+        private (Node?, Errors?) ValidateToken(string token, bool isNeg = false){
+            Node node;
+            if (uint.TryParse(token, out uint value)){
+                if (value > 2147483648)
+                    return (null, Errors.OverflowError);
+
+                node = new Node(Convert.ToInt32(value));
+                node.isNegative = isNeg;
+            }else{
+                Operator currentOp = GetOperation(token);
+                if (currentOp == Operator.Undefined)
+                    return (null, Errors.InvalidFormat);
+                else if (currentOp == Operator.NextIsNegative){
+                    
+                }
+                else{
+                    node = new Node(currentOp);
+                    node.isNegative = isNeg;
+                }
+            }
+            return (node, null);
+        }
+
+        private Node? TryLoadToTree(Node? node = null){
+            
+            if (indexOfExp == 0){
+                
+            }
+            
+
             Operator currentOp;
             int i = 0;
 
             // what we need
-            if (int.TryParse(exp[i], out int value)){
-                root = new Node(value);
-                root.isNegative = true;
-                return root;
-            }else{
-                currentOp = GetOperation(exp[i]);
-                if (currentOp == Operator.Undefined){
-                    error = Errors.InvalidFormat;
-                    return null;
-                }else{
-                    root = new Node(currentOp);
-                    root.isNegative = true;
-                }
-            }
-
-
-
-
-
-            // create root = first node
-            try {
-                if (GetOperation(exp[i]) == Operator.isNegative){
-                    i++;
-                    if (int.TryParse(exp[i], out int value)){
-                        root = new Node(value);
-                        root.isNegative = true;
-                        return root;
-                    }else{
-                        currentOp = GetOperation(exp[i]);
-                        if (currentOp == Operator.Undefined){
-                            error = Errors.InvalidFormat;
-                            return null;
-                        }else{
-                            root = new Node(currentOp);
-                            root.isNegative = true;
-                        }
-                    }
-                }
-                else if (int.TryParse(exp[i], out int value)){
-                    root = new Node(value);
-                    return root;
-                }else{
-                    currentOp = GetOperation(exp[i]);
-                    if (currentOp == Operator.Undefined){
-                        error = Errors.InvalidFormat;
-                        return null;
-                    }else{
-                        root = new Node(currentOp);
-                    }
-                }
-            }
-            catch (IndexOutOfRangeException){
-                error = Errors.InvalidFormat;
-                return null;
-            }
-
-            Node? node = root;
-            node.left = new Node(1);
-            node = node.left;
 
             return root;
         }
