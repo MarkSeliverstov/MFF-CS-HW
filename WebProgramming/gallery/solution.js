@@ -4,35 +4,23 @@ function preprocessGalleryData(imgData)
 	 * Your code goes here...
 	 */
 	
-	var newImgData = Array(Array());
-	imgData.forEach(data => {
-
-
-		newImgData.forEach(newData => {
-			if (newData.includes(data)){
-				data.similar.forEach(similar => {
-					if (!newData.includes(similar)){
-						newData.push(similar);
-					}
-				});
-			}
-			newImgData.push([data]);
-		});
-
-
-	});
-
-
-	return [ imgData ];
-}
-
-function RecAddSimilar(imgData, newData, data){
-	data.similar.forEach(similar => {
-		if (!newData.includes(similar)){
-			newData.push(similar);
-			RecAddSimilar(imgData, newData, similar);
+	let groupedBySimilar = imgData.reduce((acc, obj) => {
+		let foundGroup = acc.find(objGroup => objGroup.some(i => i.similar.includes(obj)));
+		if (foundGroup) {
+			foundGroup.push(obj);
+		} else {
+			acc.push([obj]);
 		}
+		return acc;
+	}, []);
+	
+	let sortedByDate = groupedBySimilar.map(group => {
+		return group.sort((a, b) => {
+			return a.created.getTime() - b.created.getTime();
+		});
 	});
+
+	return sortedByDate;
 }
 
 // In nodejs, this is the way how export is performed.
