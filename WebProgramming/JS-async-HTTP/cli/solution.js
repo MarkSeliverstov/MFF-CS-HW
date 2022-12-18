@@ -11,6 +11,8 @@ class DataModel {
 	constructor(apiUrl)
 	{
 		// Your code goes here...
+		this.apiUrl = apiUrl;
+		this.cache = [];
 	}
 
 
@@ -27,6 +29,40 @@ class DataModel {
 	getData(callback)
 	{
 		// Your code goes here...
+		if (this.cache.length > 0) {
+			callback(this.cache);
+		} else {
+			this.fetchData(callback);
+		}
+	}
+
+	fetchData(callback)
+	{
+		fetch(this.apiUrl)
+			.then(response => response.json())
+			.then(data => {
+				if (data.ok == true) {
+					this.fetchHours(data, callback);
+				} else {
+					callback(null, data.error);
+				}	
+			});
+	}
+
+	fetchHours(data, callback)
+	{
+		data.payload.forEach(element => {
+			fetch("restapi?action=hours&id=" + element.id)
+				.then(response => response.json())
+				.then(response => {
+					if (response.ok == true){
+						this.cache.push(response.payload);
+						callback(this.cache);
+					} else{
+						callback(null, response.error);
+					}
+				});
+			});
 	}
 
 
@@ -36,6 +72,7 @@ class DataModel {
 	invalidate()
 	{
 		// Your code goes here...
+		this.cache = [];
 	}
 
 	
@@ -49,6 +86,7 @@ class DataModel {
 	setHours(id, hours, callback = null)
 	{
 		// Your code goes here...
+
 	}
 }
 
