@@ -2,12 +2,12 @@
     {
         "id": 1,
         "caption": "Self-development",
-        "hours": 100
+        "hours": 1000
     },
     {
         "id": 2,
         "caption": "Answering e-mails",
-        "hours": 10
+        "hours": 100
     },
     {
         "id": 3,
@@ -17,7 +17,7 @@
     {
         "id": 4,
         "caption": "Chit chat around the water cooler\/coffe machine",
-        "hours": 0
+        "hours": 1999
     },
     {
         "id": 5,

@@ -11,6 +11,8 @@ class DataModel {
 	constructor(apiUrl)
 	{
 		// Your code goes here...
+		this.apiUrl = apiUrl;
+		this.cache = [];
 	}
 
 
@@ -24,9 +26,54 @@ class DataModel {
 	 *                     If the fetch failed, the callback is invoked with two arguments,
 	 *                     first one (data) is null, the second one is error message
 	 */
-	getData(callback)
+	async getData(callback)
 	{
 		// Your code goes here...
+		if (this.cache.length > 0) {
+			callback(this.cache);
+			return;
+		}
+		else {
+			try{
+				const data = await (await fetch(this.apiUrl)).json();
+				if (!data.ok){
+					callback(null, data.error);
+					return;
+				}
+				else{
+					let complete_cache = [];
+
+					for (let i = 0; i < data.payload.length; i++){
+						try{
+							const item_data =  await (await fetch(
+								this.apiUrl + 
+								"?action=hours&id=" + 
+								data.payload[i].id)).json();
+							
+								if (!item_data.ok){
+									callback(null, item_data.error);
+									return;
+								}
+								else{
+									complete_cache.push({
+										id: data.payload[i].id,
+										caption: data.payload[i].caption,
+										hours: item_data.payload.hours
+									});
+								}
+						}
+						catch (error){
+						}
+					}
+
+					this.cache = complete_cache;
+					callback(this.cache);
+					return;
+				}
+			}
+			catch (error){
+			}
+		}
 	}
 
 
@@ -36,6 +83,7 @@ class DataModel {
 	invalidate()
 	{
 		// Your code goes here...
+		this.cache = [];
 	}
 
 	
@@ -46,9 +94,32 @@ class DataModel {
 	 * @param {Function} callback Invoked when the operation is completed.
 	 *                            On failutre, one argument with error message is passed to the callback.
 	 */
-	setHours(id, hours, callback = null)
+	async setHours(id, hours, callback = null)
 	{
 		// Your code goes here...
+		try{
+			const data = await (await fetch(
+				this.apiUrl +
+				"?action=hours&id=" + id +
+				"&hours=" + hours,
+				{method: "POST"})).json();
+
+			if (!data.ok){
+				callback(data.error);
+				return;
+			}
+			else{
+				this.cache.forEach((item) => {
+					if (item.id == id){
+						item.hours = hours;
+					}
+				});
+				callback();
+				return;
+			}
+		}
+		catch (error){
+		}
 	}
 }
 

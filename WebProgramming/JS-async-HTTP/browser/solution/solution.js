@@ -31,12 +31,14 @@ class DataModel {
 		// Your code goes here...
 		if (this.cache.length > 0) {
 			callback(this.cache);
+			return;
 		}
 		else {
 			try{
 				const data = await (await fetch(this.apiUrl)).json();
 				if (!data.ok){
 					callback(null, data.error);
+					return;
 				}
 				else{
 					let complete_cache = [];
@@ -66,6 +68,7 @@ class DataModel {
 
 					this.cache = complete_cache;
 					callback(this.cache);
+					return;
 				}
 			}
 			catch (error){
@@ -103,10 +106,16 @@ class DataModel {
 
 			if (!data.ok){
 				callback(data.error);
+				return;
 			}
 			else{
-				await this.invalidate();
+				this.cache.forEach((item) => {
+					if (item.id == id){
+						item.hours = hours;
+					}
+				});
 				callback();
+				return;
 			}
 		}
 		catch (error){
