@@ -1,6 +1,6 @@
 # Evaluating expression (calculator)
 
-## Solution with the [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) design pattern
+### Solution with the [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) design pattern
 
 The goal is write a program capable of serving as a simple expression calculator. The program processes commands from standard input and prints results (or error messages) to standard output. There is only one command per line. Commands are processed sequentially; the previous command is fully executed before the next one starts loading. The calculator should terminate after it processes all input data (attempting to read a line results in `null`), or when it encounters a line containing only the string `"end"`. The calculator recognizes the following commands:
 
