@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace EvaluatingExpression{
+namespace evaluating_expression{
     #nullable enable
     class Program{
         static void Main(string[] args){
