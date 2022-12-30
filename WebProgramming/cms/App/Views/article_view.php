@@ -1,0 +1,1 @@
+<h1>Article <?php echo $data ?></h1>
