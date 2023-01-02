@@ -14,7 +14,7 @@ class Controller_Articles extends Controller
         if ($id != null){
             throw new Exception('Controller not found');
         }
-		$data = $this->model->get_data();		
+		$data = $this->model->get_article_list();		
 		$this->view->generate('articles_view.php', $data);
 	}
 }

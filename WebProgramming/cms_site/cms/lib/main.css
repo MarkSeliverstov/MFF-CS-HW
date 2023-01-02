@@ -1,13 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Cardo&family=Cinzel&family=DM+Sans&family=Federo&family=Italiana&family=Krona+One&family=Roboto&family=Space+Grotesk&family=Syne&display=swap');
 * {
 	margin: 0;
 	padding: 0;
+	font-family: 'Roboto', sans-serif;
 }
 
 body{
-	background-color: #f1f1f1;
-	font-family: 'Caveat', cursive;
+	background-color: #ffffff;
 	font-size: 20px;
 }
 
@@ -18,15 +17,246 @@ hr{
 main{
 	width: 100%;
 	height: 100vh;
+    min-height: 1000px;
+	display: flex;
+	justify-content: center;
+}
+
+footer{
+	width: 100%;
+	height: 100px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 }
 
-.article__list{
+h1{
+	padding-left: 12px;
+	padding-bottom: 12px;
+}
+
+.content{
 	width: 100%;
 	max-width: 800px;
 	margin: 0 auto;
 	padding-left: 20px;
 	padding-right: 20px;
+	padding-top: 100px;
+}
+
+.article__list{
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	padding: 12px;
+}
+
+.article{
+	justify-content: space-between;
+	display: flex;
+	width: 100%;
+	margin-bottom: 5px;
+	margin-top: 5px;
+}
+
+.article__control{
+	width: 200px;
+	min-width: 150px;
+	display: flex;
+	justify-content: space-between;
+}
+
+.articles__btns{
+	display: flex;
+	justify-content: space-between;
+	padding-top: 20px;
+	height: 32px;
+	width: 100%;
+}
+.control__pages{
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+}
+#count__of__pages{
+	width: 200px;
+	margin-left: 12px;
+}
+button{
+	padding: 5px;
+	border: 0px;
+	border-radius: 5px;
+	background-color: rgb(255, 179, 0);
+	width: 100%;
+	margin-left: 10px;
+	margin-right: 10px;
+	color: rgb(0, 0, 0);
+	font-size: 20px;	
+	font: bold;
+}
+
+button:hover{
+	background-color: rgb(255, 153, 0);
+}
+button:active{
+	background-color: rgb(255, 128, 0);
+}
+.delete{
+	background-color: rgb(251, 40, 40);
+	max-width: 60px;
+	color: white;
+	font-size: 16px;
+}
+
+.delete:hover{
+	background-color: rgb(228, 16, 16);
+}
+
+.delete:active{
+	background-color: rgb(194, 9, 9);
+}
+
+.create{
+	background-color: rgb(9, 206, 49);
+	font-size: 20px;
+}
+
+.create:hover{
+	background-color: rgb(9, 194, 49);
+}
+
+.create:active{
+	background-color: rgb(9, 172, 49);
+}
+
+#article__dialog{
+	width: 400px;
+	height: 250px;
+	position: fixed;
+	top: 25%;
+	left: calc(50% - 200px); 
+}
+
+#article__dialog p{
+	text-align: center;
+	font-size: 20px;
+	width: 100%;
+	padding-top: 20px;
+}
+
+.form__input{
+	width: 80%;
+	padding: 10px;
+	font-size: 20px;
+	border-radius: 5px;
+}
+
+.form{
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding-top: 40px;
+}
+
+.submit{
+	width: 150px;
+	height: 40px;
+	border: 0px;
+	border-radius: 5px;
+	background-color: rgb(9, 206, 49);
+	color: rgb(0, 0, 0);
+	font-size: 20px;	
+	font: bold;
+}
+
+.submit:hover{
+	background-color: rgb(9, 194, 49);
+}
+
+.submit:active{
+	background-color: rgb(9, 172, 49);
+}
+
+.dialog_cancele_btn{
+	width: 150px;
+	height: 40px;
+	border: 0px;
+	border-radius: 5px;
+	background-color: rgb(251, 40, 40);
+	color: rgb(0, 0, 0);
+	font-size: 20px;	
+	font: bold;
+}
+
+.dialog_cancele_btn:hover{
+	background-color: rgb(228, 16, 16);
+}
+
+.dialog_cancele_btn:active{
+	background-color: rgb(194, 9, 9);
+}
+
+.dialog__btns{
+	width: 80%;
+	display: flex;
+	flex-direction:row;
+	align-items: center;
+	margin-top: 40px;
+	justify-content: space-between;
+}
+
+.article__show__btns{
+    display: flex;
+    margin-top: 30px;
+}
+
+.edit{
+    background-color: rgb(60, 161, 249);
+    width: 40%;
+    min-width: 100px;
+    margin-right: 150px;
+}
+
+.article__content{
+    padding-top: 50px;
+    white-space: pre-wrap;
+}
+
+.paper{
+    border-style: solid;
+    padding: 50px;
+
+}
+
+.save{
+    background-color: rgb(9, 171, 9);
+    width: 40%;
+    min-width: 100px;
+    margin-right: 150px;
+}
+
+.return{
+    background-color: red;
+}
+ 
+.edit__name{
+    margin-left: 12px;
+    padding: 5px 10px 5px 10px;
+    font-size: 20px;
+    border-color: #000000;
+    width: 90%;
+}
+
+.edit__text{
+    margin-left: 12px;
+    padding: 12px;
+    font-size: 20px;
+    border-color: #000000;
+    width: 90%;
+    height: 300px;
+}
+
+.h1__edit__content{
+    padding-top: 30px;
 }

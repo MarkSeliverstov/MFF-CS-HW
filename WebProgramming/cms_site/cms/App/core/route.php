@@ -8,7 +8,17 @@ class Router{
             $controller_name = 'main';
             $action_name = 'index';
             $user_id = null;
-            
+
+            $article_name = null;
+            if (isset($_GET["name"])){
+                $article_name = $_GET["name"];
+            }
+
+            $content = null;
+            if (isset($_GET["content"])){
+                $content = $_GET["content"];
+            }
+
             $routes = explode('/', $_GET['page']);
             $action_and_controller = explode('-', $routes[0]);
             $possible_routes_count = 2;
@@ -39,18 +49,19 @@ class Router{
             
             // echo "model_name: $model_name <br>";
             // echo "controller_name: $controller_name <br>";
+            // echo "action: $action_name <br> ";
             // echo "user_id: $user_id <br>";
-            
+
             // Get model file
             $model_file = strtolower($model_name) . '.php';
-            $model_path = 'App/Models/' . $model_file;
+            $model_path = __DIR__ . '/../models/' . $model_file;
             if (file_exists($model_path)) {
                 include($model_path);
             }
 
             // Get controller file
             $controller_file = strtolower($controller_name) . '.php';
-            $controller_path = 'App/Controllers/' . $controller_file;
+            $controller_path = __DIR__ . '/../Controllers/' . $controller_file;
             if ( file_exists($controller_path) ) {
                 include($controller_path);
             } else {
@@ -63,7 +74,15 @@ class Router{
 
             // call action
             if (method_exists($controller, $action)) {
-                $controller->$action($user_id);
+                if (!empty($article_name)){
+                    $controller->$action($article_name);
+                }
+                else if (is_string($content)){
+                    $controller->$action($user_id, $content);
+                }
+                else{
+                    $controller->$action($user_id);
+                }
             } else {
                 throw new Exception('Action not found');
             }
