@@ -82,7 +82,7 @@ abstract class Expression
     }
 
     public abstract int Evaluate();
-    public abstract double Evaluate_double();
+    public abstract void Accept(IAlgorithm alg);
 }
 
 abstract class ValueExpression : Expression
@@ -96,11 +96,6 @@ abstract class ValueExpression : Expression
     {
         return Value;
     }
-
-    public sealed override double Evaluate_double()
-    {
-        return Convert.ToDouble(Value);
-    }
 }
 
 sealed class ConstantExpression : ValueExpression
@@ -111,6 +106,11 @@ sealed class ConstantExpression : ValueExpression
     }
 
     public override int Value { get; }
+
+    public override void Accept(IAlgorithm alg)
+    {
+        alg.Visit(this);
+    }
 }
 
 abstract class OperatorExpression : Expression
@@ -138,13 +138,7 @@ abstract class UnaryExpression : OperatorExpression
         return Compute(operand!.Evaluate());
     }
 
-    public sealed override double Evaluate_double()
-    {
-        return Compute_double(operand!.Evaluate());
-    }
-
     protected abstract int Compute(int opValue);
-    protected abstract double Compute_double(double opValue);
 }
 
 abstract class BinaryExpression : OperatorExpression
@@ -173,13 +167,7 @@ abstract class BinaryExpression : OperatorExpression
         return Compute(leftOperand!.Evaluate(), rightOperand!.Evaluate());
     }
 
-    public sealed override double Evaluate_double()
-    {
-        return Compute_double(leftOperand!.Evaluate_double(), rightOperand!.Evaluate_double());
-    }
-
     protected abstract int Compute(int op0Value, int op1Value);
-    protected abstract double Compute_double(double op0Value, double op1Value);
 }
 
 sealed class PlusExpression : BinaryExpression
@@ -189,9 +177,9 @@ sealed class PlusExpression : BinaryExpression
         return checked(op0Value + op1Value);
     }
 
-    protected override double Compute_double(double op0Value, double op1Value)
+    public override void Accept(IAlgorithm alg)
     {
-        return op0Value + op1Value;
+        alg.Visit(this);
     }
 
 }
@@ -203,9 +191,9 @@ sealed class MinusExpression : BinaryExpression
         return checked(op0Value - op1Value);
     }
 
-    protected override double Compute_double(double op0Value, double op1Value)
+    public override void Accept(IAlgorithm alg)
     {
-        return op0Value - op1Value;
+        alg.Visit(this);
     }
 }
 
@@ -216,9 +204,9 @@ sealed class MultiplyExpression : BinaryExpression
         return checked(op0Value * op1Value);
     }
 
-    protected override double Compute_double(double op0Value, double op1Value)
+    public override void Accept(IAlgorithm alg)
     {
-        return op0Value * op1Value;
+        alg.Visit(this);
     }
 }
 
@@ -229,9 +217,9 @@ sealed class DivideExpression : BinaryExpression
         return (op0Value / op1Value);
     }
 
-    protected override double Compute_double(double op0Value, double op1Value)
+    public override void Accept(IAlgorithm alg)
     {
-        return (op0Value / op1Value);
+        alg.Visit(this);
     }
 }
 
@@ -242,104 +230,87 @@ sealed class UnaryMinusExpression : UnaryExpression
         return checked(-opValue);
     }
 
-    protected override double Compute_double(double opValue)
+    public override void Accept(IAlgorithm alg)
     {
-        return -opValue;
+        alg.Visit(this);
     }
 }
 
-abstract class Command
+class Command
 {
-    public abstract void Execute();
-
-    public static Command? ParseCommand(string input)
+    public static void Parse(string input)
     {
-        string[] tokens = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        switch (tokens[0])
-        {
-            case "=":
-                if (input.Length < 3)
-                {
-                    Memory.expr = null;
-                    return null;
-                }
-                return new Calculate_cmd(input.Substring(2));
-
-            case "i":
-                return new Calculate_in_int();
-
-            case "d":
-                return new Calculate_in_double();
-
-            default:
-                return null;
+        string[] tokens = input.Split(' ', StringSplitOptions.RemoveEmptyEntries & StringSplitOptions.TrimEntries);
+        
+        try{
+            switch (tokens[0])
+            {
+                case "=":
+                    if (input.Length < 3)
+                    {
+                        Memory.expr = null;
+                        throw new Exception("Format Error");
+                    }
+                    ParseExpression(input.Substring(2));
+                    break;
+                case "i":
+                    if (Memory.expr == null)
+                    {
+                        Console.WriteLine("Expression Missing");
+                        return;
+                    }
+                    IntEvaluate alg = new IntEvaluate();
+                    Memory.expr.Accept(alg);
+                    Console.WriteLine(alg.Result);
+                    break;
+                case "d":
+                    if (Memory.expr == null)
+                    {
+                        Console.WriteLine("Expression Missing");
+                        return;
+                    }
+                    DoubleEvaluate alg2 = new DoubleEvaluate();
+                    Memory.expr.Accept(alg2);
+                    Console.WriteLine(alg2.Result.ToString("F5"));
+                    break;
+                case "p":
+                    if (Memory.expr == null)
+                    {
+                        Console.WriteLine("Expression Missing");
+                        return;
+                    }
+                    PrintExpression alg3 = new PrintExpression();
+                    Memory.expr.Accept(alg3);
+                    Console.WriteLine(alg3.Result);
+                    break;
+                case "P":
+                    if (Memory.expr == null)
+                    {
+                        Console.WriteLine("Expression Missing");
+                        return;
+                    }
+                    PrintExpression_WithMinBrackets alg4 = new PrintExpression_WithMinBrackets();
+                    Memory.expr.Accept(alg4);
+                    Console.WriteLine(alg4.Result);
+                    break;
+                default:
+                    throw new Exception("Format Error");
+            }
+        }
+        catch (OverflowException) {
+            Console.WriteLine("Overflow Error");
+        }
+        catch (DivideByZeroException) {
+            Console.WriteLine("Divide Error");
         }
     }
-}
 
-sealed class Calculate_cmd : Command
-{
-    public Calculate_cmd(string input)
+    public static void ParseExpression(string input)
     {
         Memory.expr = Expression.ParsePrefixExpression(input);
-    }
-    
-    public override void Execute()
-    {
         if (Memory.expr == null)
         {
             Console.WriteLine("Format Error");
-        }
-        else
-        {
-            Console.Write("");
-        }
-    }
-}
-
-sealed class Calculate_in_int : Command
-{
-    public override void Execute()
-    {
-        if (Memory.expr != null)
-        {
-            try {
-                Console.WriteLine(Memory.expr.Evaluate());
-            }
-            catch (OverflowException) {
-                Console.WriteLine("Overflow Error");
-            }
-            catch (DivideByZeroException) {
-                Console.WriteLine("Divide Error");
-            }
-        }
-        else
-        {
-            Console.WriteLine("Expression Missing");
-        }
-    }
-}
-
-sealed class Calculate_in_double : Command
-{
-    public override void Execute()
-    {
-        if (Memory.expr != null)
-        {
-            try {
-                Console.WriteLine(Memory.expr.Evaluate_double().ToString("F5"));
-            }
-            catch (OverflowException) {
-                Console.WriteLine("Overflow Error");
-            }
-            catch (DivideByZeroException) {
-                Console.WriteLine("Divide Error");
-            }
-        }
-        else
-        {
-            Console.WriteLine("Expression Missing");
         }
     }
 }
@@ -353,6 +324,7 @@ class Program
     static void Main(string[] args)
     {
         string? input = Console.ReadLine()!;
+
         while ((input != null && input != "end"))
         {
             if (input == "")
@@ -361,13 +333,11 @@ class Program
                 continue;
             }
 
-            Command? cmd = Command.ParseCommand(input)!;
-
-            if (cmd == null){
-                Console.WriteLine("Format Error");
+            try{
+                Command.Parse(input);
             }
-            else{
-                cmd.Execute();
+            catch (Exception e){
+                Console.WriteLine("Format Error");
             }
 
             input = Console.ReadLine()!;
