@@ -1,4 +1,5 @@
-﻿namespace ExpressionEvaluator2;
+﻿using System;
+namespace ExpressionEvaluator2;
 #nullable enable
 
 interface IAlgorithm{
@@ -124,7 +125,7 @@ class DoubleEvaluate: IAlgorithm
 
 class PrintExpression: IAlgorithm
 {
-    public string Result { get; private set; }
+    public string Result { get; private set; } = "";
     public void Visit(PlusExpression expr)
     {
         string left, right;
@@ -168,6 +169,8 @@ class PrintExpression: IAlgorithm
     public void Visit(UnaryMinusExpression expr)
     {
         expr.Operand.Accept(this);
+        if (Result[0] == '-')
+            Result = $"({Result})";
         Result = $"(-{Result})";
     }
 
@@ -180,7 +183,7 @@ class PrintExpression: IAlgorithm
 
 class PrintExpression_WithMinBrackets : IAlgorithm
 {
-    public string Result { get; private set; }
+    public string Result { get; private set; } = "";
     public void Visit(PlusExpression expr)
     {
         string left, right;
@@ -236,7 +239,8 @@ class PrintExpression_WithMinBrackets : IAlgorithm
     public void Visit(UnaryMinusExpression expr)
     {
         expr.Operand.Accept(this);
-        
+        if (Result[0] == '-')
+            Result = $"({Result})";
         Result = $"-{Result}";
     }
 

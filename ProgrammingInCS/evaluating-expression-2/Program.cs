@@ -9,7 +9,6 @@ abstract class Expression
     {
         string[] tokens = exprString.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-
         Expression? result = null;
         Stack<OperatorExpression> unresolved = new Stack<OperatorExpression>();
 
@@ -240,8 +239,7 @@ class Command
 {
     public static void Parse(string input)
     {
-        string[] tokens = input.Split(' ', StringSplitOptions.RemoveEmptyEntries & StringSplitOptions.TrimEntries);
-        
+        string[] tokens = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         try{
             switch (tokens[0])
             {
@@ -249,52 +247,54 @@ class Command
                     if (input.Length < 3)
                     {
                         Memory.expr = null;
-                        throw new Exception("Format Error");
+                        Console.WriteLine("Format Error");
+                        break;
                     }
                     ParseExpression(input.Substring(2));
                     break;
                 case "i":
-                    if (Memory.expr == null)
-                    {
+                    if (Memory.expr == null){
                         Console.WriteLine("Expression Missing");
-                        return;
+                        break;
                     }
+             
                     IntEvaluate alg = new IntEvaluate();
                     Memory.expr.Accept(alg);
                     Console.WriteLine(alg.Result);
                     break;
                 case "d":
-                    if (Memory.expr == null)
-                    {
+                    if (Memory.expr == null){
                         Console.WriteLine("Expression Missing");
-                        return;
+                        break;
                     }
+             
                     DoubleEvaluate alg2 = new DoubleEvaluate();
                     Memory.expr.Accept(alg2);
                     Console.WriteLine(alg2.Result.ToString("F5"));
                     break;
                 case "p":
-                    if (Memory.expr == null)
-                    {
+                    if (Memory.expr == null){
                         Console.WriteLine("Expression Missing");
-                        return;
+                        break;
                     }
+             
                     PrintExpression alg3 = new PrintExpression();
                     Memory.expr.Accept(alg3);
                     Console.WriteLine(alg3.Result);
                     break;
                 case "P":
-                    if (Memory.expr == null)
-                    {
+                   if (Memory.expr == null){
                         Console.WriteLine("Expression Missing");
-                        return;
+                        break;
                     }
+             
                     PrintExpression_WithMinBrackets alg4 = new PrintExpression_WithMinBrackets();
                     Memory.expr.Accept(alg4);
                     Console.WriteLine(alg4.Result);
                     break;
                 default:
-                    throw new Exception("Format Error");
+                    Console.WriteLine("Format Error");
+                    break;
             }
         }
         catch (OverflowException) {
@@ -308,6 +308,7 @@ class Command
     public static void ParseExpression(string input)
     {
         Memory.expr = Expression.ParsePrefixExpression(input);
+        
         if (Memory.expr == null)
         {
             Console.WriteLine("Format Error");
@@ -333,12 +334,7 @@ class Program
                 continue;
             }
 
-            try{
-                Command.Parse(input);
-            }
-            catch (Exception e){
-                Console.WriteLine("Format Error");
-            }
+            Command.Parse(input);
 
             input = Console.ReadLine()!;
         }
