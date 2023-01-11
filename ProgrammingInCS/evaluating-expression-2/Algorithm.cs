@@ -1,5 +1,6 @@
 ﻿using System;
-namespace ExpressionEvaluator2;
+namespace ExpressionEvaluator2
+{
 #nullable enable
 
 interface IAlgorithm{
@@ -77,7 +78,7 @@ class DoubleEvaluate: IAlgorithm
         left = Result;
         expr.RightOperand.Accept(this);
         right = Result;
-        Result = checked(left + right);
+        Result = left + right;
     }
 
     public void Visit(MinusExpression expr)
@@ -87,7 +88,7 @@ class DoubleEvaluate: IAlgorithm
         left = Result;
         expr.RightOperand.Accept(this);
         right = Result;
-        Result = checked(left - right);
+        Result = left - right;
     }
 
     public void Visit(MultiplyExpression expr)
@@ -97,7 +98,7 @@ class DoubleEvaluate: IAlgorithm
         left = Result;
         expr.RightOperand.Accept(this);
         right = Result;
-        Result = checked(left * right);
+        Result = left * right;
     }
 
     public void Visit(DivideExpression expr)
@@ -107,13 +108,13 @@ class DoubleEvaluate: IAlgorithm
         left = Result;
         expr.RightOperand.Accept(this);
         right = Result;
-        Result = checked(left / right);
+        Result = left / right;
     }
 
     public void Visit(UnaryMinusExpression expr)
     {
         expr.Operand.Accept(this);
-        Result = checked(-Result);
+        Result = -Result;
     }
 
     public void Visit(ConstantExpression expr)
@@ -125,7 +126,7 @@ class DoubleEvaluate: IAlgorithm
 
 class PrintExpression: IAlgorithm
 {
-    public string Result { get; private set; } = "";
+    public string Result = "";
     public void Visit(PlusExpression expr)
     {
         string left, right;
@@ -169,8 +170,6 @@ class PrintExpression: IAlgorithm
     public void Visit(UnaryMinusExpression expr)
     {
         expr.Operand.Accept(this);
-        if (Result[0] == '-')
-            Result = $"({Result})";
         Result = $"(-{Result})";
     }
 
@@ -183,7 +182,7 @@ class PrintExpression: IAlgorithm
 
 class PrintExpression_WithMinBrackets : IAlgorithm
 {
-    public string Result { get; private set; } = "";
+    public string Result = "";
     public void Visit(PlusExpression expr)
     {
         string left, right;
@@ -191,7 +190,7 @@ class PrintExpression_WithMinBrackets : IAlgorithm
         left = Result;
         expr.RightOperand.Accept(this);
         right = Result;
-        if (expr.RightOperand is UnaryExpression)
+        if (Result[0] == '-')
             right = $"({right})";
         Result = $"{left}+{right}";
     }
@@ -203,7 +202,7 @@ class PrintExpression_WithMinBrackets : IAlgorithm
         left = Result;
         expr.RightOperand.Accept(this);
         right = Result;
-        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || expr.RightOperand is UnaryExpression)
+        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || right[0] == '-')
             right = $"({right})";
         Result = $"{left}-{right}";
     }
@@ -217,7 +216,7 @@ class PrintExpression_WithMinBrackets : IAlgorithm
         right = Result;
         if (expr.LeftOperand is PlusExpression || expr.LeftOperand is MinusExpression)
             left = $"({left})";
-        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || expr.RightOperand is UnaryExpression)
+        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || right[0] == '-')
             right = $"({right})";
         Result = $"{left}*{right}";
     }
@@ -231,7 +230,7 @@ class PrintExpression_WithMinBrackets : IAlgorithm
         right = Result;
         if (expr.LeftOperand is PlusExpression || expr.LeftOperand is MinusExpression)
             left = $"({left})";
-        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || expr.RightOperand is UnaryExpression)
+        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || right[0] == '-')
             right = $"({right})";
         Result = $"{left}/{right}";
     }
@@ -248,4 +247,5 @@ class PrintExpression_WithMinBrackets : IAlgorithm
     {
         Result = expr.Value.ToString();
     }
+}
 }
