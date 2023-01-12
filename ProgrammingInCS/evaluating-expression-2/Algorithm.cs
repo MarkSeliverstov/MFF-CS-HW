@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Reflection;
+using System.Text;
+
 namespace ExpressionEvaluator2
 {
 #nullable enable
@@ -126,126 +129,158 @@ class DoubleEvaluate: IAlgorithm
 
 class PrintExpression: IAlgorithm
 {
-    public string Result = "";
-    public void Visit(PlusExpression expr)
-    {
-        string left, right;
+    public StringBuilder Result;    
+
+    private void SetBrackets(BinaryExpression expr, char op){
+        StringBuilder left,right;
+
         expr.LeftOperand.Accept(this);
         left = Result;
+
         expr.RightOperand.Accept(this);
         right = Result;
-        Result = $"({left}+{right})";
+
+        StringBuilder sb = new StringBuilder("(");
+        sb.Append(left);
+        sb.Append(op);
+        sb.Append(right);
+        sb.Append(')');
+        Result = sb;
+    }
+    public void Visit(PlusExpression expr)
+    {
+        SetBrackets(expr, '+');
     }
 
     public void Visit(MinusExpression expr)
     {
-        string left, right;
-        expr.LeftOperand.Accept(this);
-        left = Result;
-        expr.RightOperand.Accept(this);
-        right = Result;
-        Result = $"({left}-{right})";
+        SetBrackets(expr, '-');
     }
 
     public void Visit(MultiplyExpression expr)
     {
-        string left, right;
-        expr.LeftOperand.Accept(this);
-        left = Result;
-        expr.RightOperand.Accept(this);
-        right = Result;
-        Result = $"({left}*{right})";
+        SetBrackets(expr, '*');
     }
 
     public void Visit(DivideExpression expr)
     {
-        string left, right;
-        expr.LeftOperand.Accept(this);
-        left = Result;
-        expr.RightOperand.Accept(this);
-        right = Result;
-        Result = $"({left}/{right})";
+        SetBrackets(expr, '/');
     }
 
     public void Visit(UnaryMinusExpression expr)
     {
         expr.Operand.Accept(this);
-        Result = $"(-{Result})";
+        StringBuilder sb = Result;
+        sb.Insert(0, "(-");
+        sb.Append(')');
+        Result = sb;
     }
 
     public void Visit(ConstantExpression expr)
     {
-        Result = expr.Value.ToString();
+        Result = new StringBuilder(expr.Value.ToString());
     }
 
 }
 
 class PrintExpression_WithMinBrackets : IAlgorithm
 {
-    public string Result = "";
-    public void Visit(PlusExpression expr)
-    {
-        string left, right;
+    public StringBuilder Result;
+
+    public void FirstPriority(BinaryExpression expr, char op){
+        StringBuilder left,right;
+
+        expr.LeftOperand.Accept(this);
+        StringBuilder sb = Result;
+
+        if (expr.LeftOperand is PlusExpression || expr.LeftOperand is MinusExpression){
+            sb.Insert(0, '(');
+            sb.Append(')');
+        }
+
+        left = sb;
+
+        expr.RightOperand.Accept(this);
+        sb = Result;
+        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression){
+            sb.Insert(0, '(');
+            sb.Append(')');
+        }
+        right = sb;
+
+        sb = left;
+        sb.Append(op);
+        sb.Append(right);
+        Result = sb;
+    }
+
+    public void SecondPriority(BinaryExpression expr, char op){
+        StringBuilder left,right;
+
         expr.LeftOperand.Accept(this);
         left = Result;
+
+        expr.RightOperand.Accept(this);
+        StringBuilder sb = Result;
+        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || expr.RightOperand is UnaryMinusExpression){
+            sb.Insert(0, '(');
+            sb.Append(')');
+        }
+
+        right = sb;
+        sb = left;
+        sb.Append(op);
+        sb.Append(right);
+        Result = sb;
+    }
+
+    public void Visit(PlusExpression expr)
+    {
+        StringBuilder left, right;
+
+        expr.LeftOperand.Accept(this);
+        left = Result;
+
         expr.RightOperand.Accept(this);
         right = Result;
-        if (Result[0] == '-')
-            right = $"({right})";
-        Result = $"{left}+{right}";
+
+        StringBuilder sb = left;
+        sb.Append('+');
+        sb.Append(right);
+        Result = sb;
     }
 
     public void Visit(MinusExpression expr)
     {
-        string left, right;
-        expr.LeftOperand.Accept(this);
-        left = Result;
-        expr.RightOperand.Accept(this);
-        right = Result;
-        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || right[0] == '-')
-            right = $"({right})";
-        Result = $"{left}-{right}";
+        SecondPriority(expr, '-');
     }
 
     public void Visit(MultiplyExpression expr)
     {
-        string left, right;
-        expr.LeftOperand.Accept(this);
-        left = Result;
-        expr.RightOperand.Accept(this);
-        right = Result;
-        if (expr.LeftOperand is PlusExpression || expr.LeftOperand is MinusExpression)
-            left = $"({left})";
-        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || right[0] == '-')
-            right = $"({right})";
-        Result = $"{left}*{right}";
+        FirstPriority(expr, '*');
     }
 
     public void Visit(DivideExpression expr)
     {
-        string left, right;
-        expr.LeftOperand.Accept(this);
-        left = Result;
-        expr.RightOperand.Accept(this);
-        right = Result;
-        if (expr.LeftOperand is PlusExpression || expr.LeftOperand is MinusExpression)
-            left = $"({left})";
-        if (expr.RightOperand is PlusExpression || expr.RightOperand is MinusExpression || right[0] == '-')
-            right = $"({right})";
-        Result = $"{left}/{right}";
+        FirstPriority(expr, '/');
     }
 
     public void Visit(UnaryMinusExpression expr)
     {
         expr.Operand.Accept(this);
-        if (Result[0] == '-')
-            Result = $"({Result})";
-        Result = $"-{Result}";
+        StringBuilder sb = Result;
+
+        if (expr.Operand is not UnaryExpression && expr.Operand is not ConstantExpression){
+            sb.Insert(0, '(');
+            sb.Append(')');
+        }
+        sb.Insert(0, '-');
+        Result = sb;
     }
 
     public void Visit(ConstantExpression expr)
     {
-        Result = expr.Value.ToString();
+        Result = new StringBuilder(expr.Value.ToString());
     }
 }
 }
