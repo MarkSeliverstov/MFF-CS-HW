@@ -38,7 +38,7 @@ $(function(){
 						window.alert("Given input is not a valid number.");
 						return;
 					}
-
+					
 					// Invoke async update...
 					const button = $(this);
 					button.removeClass('btn-success');
