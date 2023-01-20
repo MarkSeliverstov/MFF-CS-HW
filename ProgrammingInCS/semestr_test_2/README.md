@@ -1,53 +1,72 @@
-Zadání úlohy
-Vaším úkolem je naprogramovat rozšířený preprocessor jazyka C#. Jedná se o nástroj, který přečte zdrojový soubor jazyka C#, řídí se speciálními direktivami preprocesoru začínajícími znakem křížek (#) a produkuje výstupní zdrojový kód C# do jiného souboru.
+# General Information
 
-Pokud je program spuštěn s jiným počtem parametrů na příkazové řádce nežli 1, tak na standardní výstup vypíše text Missing argument, a ukončí se. Jediný parametr příkazové řádky je jméno souboru s příponou .cse. Pokud název souboru nemá správnou příponu, program na standardní výstup vypíše Unsupported file a ukončí se. Jinak program argument na příkazové řádce chápe jako jméno souboru, který se má zpracovat. Výsledek zpracování program uloží do výstupního souboru se stejným jménem, ale s příponou .cs. Tedy např. při použití Program.exe library.cse program vygeneruje soubor library.cs. Pokud vstupní soubor nelze otevřít nebo z něj nelze číst nebo při čtení dojde k libovolné chybě, program se korektně ukončí. Pokud program již začal s psáním do výstupního souboru v situaci kdy došlo k nějaké chybě, je povoleno nechat rozpracovaný výstup na disku.
+You are to complete the assignment within a time limit of 3 hours. The time starts after the assignment is well explained and all questions are answered. It is possible to ask additional questions during the test as well, but in such a form that won't disturb others in their work.
+Your solution will be tested in the ReCodEx environment. It is necessary to fully comply with assignment details (i.e. the error messages). You are graded by the implementation of main concepts and it's functionality. The code you write is expected to be of a certain quality (i.e. code style and design). Implementation that only uses few methods without any decomposition of the problem is not valid.
+You are allowed to use any documentation in both textual and electronic form, expect for existing solutions to this (or similar) assignment. It is not allowed to communicate with anyone for any reason.
+Once your solution is finished, call an examiner to take a look at your submission.
+It is necessary to pass all the tests in ReCodEx.
 
-Program pracuje ve dvou režimech, pasivní a aktivní, mezi kterými se přepíná v závislosti jaké instrukce čte. Program zpracovává vstupní soubor po řádcích. Pro každý řádek se podívá jestli první nebílý znak na řádku je křížek (#) a pokud ano, provede instrukci preprocesoru podle specifikace níže a vstupní řádek nezapisuje do výstupu. Pokud se nejedná o instrukci preprocesoru, a program je v aktivním režimu, pak okopíruje vstupní řádek do výstupního souboru beze změny. Pokud se nejedná o instrukci preprocesoru a program je v pasivním módu, tak se řádek ignoruje.
+# Assignment Description
 
-Direktivy preprocesoru
-Program podporuje následující příkazy. Pro účely chybových hlášení předpokládejte následující konvenci:
+Your goal is to create a program that acts as extended preprocessor of the C# language. That means a tool, which reads an input file (C# source code), understands special preprocessor directives, beginning with a hash character (#) and produces output C# code to a different file.
 
-Znak F značí jméno souboru, ve kterém došlo k chybě. Znak L značí číslo řádku, na kterém došlo k chybě.
+If the program is run with different amount of command line arguments then 1, the program prints Missing argument to the standard output and exits. The only parameter on the command line is the name of the file, ending with .cse extension. If the name of the file is with different extension, the program prints out Unsupported file and exits. Otherwise, the command line argument is treated as a file name to be processed. The processed file will be stored in a file with the same name as the input file, but with the .cs extension. That means, that calling the program as Program.exe library.cse will produce a file library.cs. If the input file cannot be read for any reason, the program will exit. If the program already processed some of the input into an output file, it is allowed to leave the partial output on the disk, should any error happen.
 
-#define Symbol
-Pokud je program v aktivním režimu, pak se deklaruje existence symbolu z názvem Symbol. Pokud je symbol již deklarovaný nebo pokud je program v pasivním režimu, příkaz se ignoruje.
+The program works in two modes: passive and active, and switches between these modes based on the instructions it reads. Program processes the input file by lines. For every line, the program checks what is the first non-whitespace character, and if it is a hash (#), it performs an instruction based on the specification below and doesn't produce any output for this line. If the line is not a preprocessor directive and the program is in active mode, then the line is copied to the output. If the line is not a preprocessor directive and the program is in passive mode, the line is ignored.
 
-#undef Symbol
-Pokud je program v aktivním režimu, pak se zapomene deklarace symbolu s názvem Symbol. Pokud symbol nebyl deklarovaný nebo pokud je program v pasivním režimu, příkaz se ignoruje.
+# Preprocessor directives
 
-#include file
-Pokud je program v aktivním režimu, pak se zpracuje soubor s názvem file podle těchto pravidel (až na kontrolu správné přípony souboru) a zpracovaný výstup se vloží do aktuálního místa ve výstupním souboru (klidně na více řádků). Zpracování vnořeného souboru používá stejnou tabulku symbolů, tedy vnořený soubor může deklarovat nové nebo zapomínat staré symboly i pro zpracování jiných souborů. Pokud je program v pasivním režimu, příkaz se ignoruje.
+Program supports the following instructions. For the purpose of error messages, assume the following conventions:
 
-Pokud soubor file neexistuje, nebo nejde otevřít, nebo z něj nelze číst, program vypíše následující text: F#L: #include invalid file name 'file' na standardní výstup a ukončí se.
+F character denotes a name of the file, in which the error happened. L character denotes a line number, at which the error happened.
 
-Podmíněný příkaz #if, #else, #endif
-Příkaz je rozdelen do několika řádků následujícím způsobem:
+`#define Symbol`
 
+If the program is in active mode, then a symbol named Symbol is declared. If the symbol was already declared, or the program is in passive mode, the directive is ignored.
+
+`#undef Symbol`
+
+If the program is in active mode, then a declaration of a symbol named Symbol is forgotten. If the symbol was not declared, or the program is in passive mode, the directive is ignored.
+
+`#include file`
+
+If the program is in active mode, then a file with a name file is processed, according to these rules (except for checking for the right extension), and processed output is inserted to current location in the output file (can span across multiple lines). Processing of nested files shares the same symbol table. It is therefore possible to declare new or forget old symbols while processing nested file. If the program is in passive mode, the directive is ignored.
+
+If the file file doesn't exist, or can't be read for any reason, the program prints the following text:F#L: #include invalid file name 'file' to the standard output and exits.
+
+# Conditional command #if, #else, #endif
+
+The directive is split among multiple lines in the following way:
+
+```
 #if Symbol
 Code1
 #else
 Code2
 #endif
-Sekvence Code1 reprezentuje všechny řádky mezi #if a #else. Sekvence Code2 reprezentuje všechny řádky mezi #else a #endif. Tyto sekvence můžou být rovněž prázdné (nicméně příkazy #if, #else i #endif musí být ukončeny znakem nového řádku a musí stát na řádku samostatně). Blok #else je nepovinný. Sémantika je pak stejná, jako by byl blok else (sekvence řádků Code2) prázdný.
+```
 
-Pokud je symbol Symbol deklarován, pak je kód mezi #if a #else (Code1) aktivní. V opačném případě je aktivní kód mezi #else a #endif (Code2). Program je v rámci podmíněného příkazu aktivní, pokud jsou aktivní všechny bloky, ve kterých se program momentálně nachází. Hlavní blok (mezi začátkem a koncem souboru zpracovávaného souboru) je vždy aktivní.
+Sequence Code1 denotes all lines between #if and #else. Sequence Code2 denotes all lines between #else and #endif. These sequences can also be empty (although the #if, #else and #endif commands must be terminated by a line break character and must be on it's individual line). The #else block is optional. The semantics is the same, as if the else block (sequence of lines Code2) was empty.
 
-Je tedy nutné i v případě, že je program pasivní stále zpracovávat příkazy #if, #else, #endif a pamatovat si v kterých částech byl symbol definovaný nebo ne.
+If the symbol Symbol is declared, then the code between #if and #else (Code1) is active. Otherwise, the code between #else and #endif (Code2) is active. Program is active within the conditional command, if all the blocks the program currently is in, are active. The main block (within the beginning and the end of a file) is always active.
 
-Pokud příkaz #if není ukončen příkazem #endif (tedy program narazí v rámci zpracování příkazu #if na konec souboru), program vypíše F#L: Missing #endif na standardní výstup a ukončí se, kde L je číslo posledního řádku v souboru.
+Therefore, even if the program is in passive mode, it is necessary to process the #if, #else, #endif commands, and remember which symbol was defined and which was not.
 
-Pokud se příkaz #else vyskytuje mimo blok #if-#endif, program vypíše F#L: Standalone #else na standardní výstup a ukončí se.
+If the #if directive doesn't have a pairing #endif directive (i.e. the program will reach the end of file while processing the conditional command), the program will print F#L: Missing #endif to the standard output and will exit, where L is a number of the last line in the file.
 
-Pokud se příkaz #endif objeví bez párového předcházejícího příkazu #if, program vypíše F#L: Standalone #endif na standardní výstup a ukončí se.
+If the #else directive is out of #if-#endif block, the program prints F#L: Standalone #else to the standard output and exits.
 
-Garance
-Můžete předpokládat, že Symbol nikdy neobsahuje bílé znaky a vždy obsahuje alespoň jeden znak a je od příkazu oddělen alespoň jednou mezerou (tedy že příkazy #define, #undef a #if jsou vždy zadané správné)
-Můžete předpokládat, že se podmíněný příkaz vyskytuje vždy celý v rámci jednoho souboru. Není nutné nijak řešit případy, kdy by část podmíněného příkazu byla v jiném souboru vloženém pomoci příkazu #include.
-Můžete předpokládat, že ve vstupním programu nejsou žádné jiné direktivy preprocesoru než ty specifikované výše.
-Příklady
-Zpracování vstupního souboru input.cse s následujícím obsahem:
+If the #endif directive is without pairing #if directive, the program prints F#L: Standalone #endif to the standard output and exits.
 
+# Restrictions
+
+You may assume that the Symbol never contains any whitespace characters and always has at least one character and always is separated from the directive by at least one space (i.e. that the #define, #undef a #if directives are always syntactically correct)
+You may assume that the conditional command is always within a single file. It is not required to handle a situations where a part of the conditional command is in different file that is included by the #include directive.
+You may assume that there are no other preprocessor directives than the ones specified in this document.
+Examples
+Processing of an input file named input.cse with the following content:
+
+```
 #define DEBUG
 #define EXTRA_DEBUG
 
@@ -69,14 +88,15 @@ Console.WriteLine("Hello");
 #endif
 
 return 0;
-vyprodukuje výstupní soubor input.cs s následujícím obsahem:
+```
 
+will produce an output file named input.cs with the following content:
 
+```
 Console.WriteLine("Hello");
 
     Console.WriteLine("Debug");
     Console.WriteLine("Extra");
 
-
-
 return 0;
+```
