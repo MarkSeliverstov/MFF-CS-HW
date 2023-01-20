@@ -7,17 +7,6 @@ using System.Collections;
 
 namespace semestrProject{
 #nullable enable
-class Reader{
-    public StreamReader sr;
-
-    public Reader(string fname){
-        sr = new StreamReader(fname+".cse");
-    }
-
-    public void CloseFile(){
-        sr.Close();
-    }
-}
 
 class Writer{
     private StreamWriter sw;
@@ -116,7 +105,6 @@ class Preprocessor{
                 if (stack.Peek().Item1 == Conditional.c_if){
                     if (stack.Peek().Item2 == true)
                         Mode.Reverse();
-                    //stack.Push(new Tuple<Conditional, bool>(Conditional.c_else, true));
                 }
                 else{
                     throw new Exception($"{fname}#{currLine}: Standalone #else");
