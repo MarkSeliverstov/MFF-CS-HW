@@ -63,7 +63,9 @@ If the #endif directive is without pairing #if directive, the program prints F#L
 You may assume that the Symbol never contains any whitespace characters and always has at least one character and always is separated from the directive by at least one space (i.e. that the #define, #undef a #if directives are always syntactically correct)
 You may assume that the conditional command is always within a single file. It is not required to handle a situations where a part of the conditional command is in different file that is included by the #include directive.
 You may assume that there are no other preprocessor directives than the ones specified in this document.
-Examples
+
+# Examples
+
 Processing of an input file named input.cse with the following content:
 
 ```
