@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Spath
 {
@@ -58,16 +59,36 @@ namespace Spath
             List<Node> result = new List<Node>();
             List<Node> preResult = new List<Node>();
             result.Add(this.CurrentNode);
-            string[] tokens = sr.ReadLine()!.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            string path = string.Join(null, tokens);
-            tokens = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            List<string> predicats = new List<string>();
+            string identefier = "";
 
-            foreach (string token in tokens)
+            int c = sr.Read();
+            while (c != -1)
             {
-                string[] subTokens = token.Split(new char[]{'[', ']'}, StringSplitOptions.RemoveEmptyEntries);
-                
-                // TODO: Add search by index tokens
+                // TODO: add case for identefier
+                char ch = (char)c;
+                switch (ch)
+                {
+                    case ' ':
+                        break;
+                    case '\t':
+                        break;
+                    case '[':
+                        break;
+                    case ']':
+                        break;
+                    case '/':
+                        break;
+                    case '*':
+                        break;
+                    case '.':
+                        break;
+                    default:
+                        break;
+                }
+                c = sr.Read();
             }
+            
             return result;
         }
     }
