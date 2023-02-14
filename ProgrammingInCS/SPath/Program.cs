@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Text;
 
-namespace Spath
+namespace SPath
 {
     class Node
     {
@@ -22,13 +20,15 @@ namespace Spath
     }
 
     class Tree{
-        Node root;
+        public Node root {get;}
         Node CurrentNode;
+        List<Node> Set;
 
         public Tree()
         {
             root = new Node(null);
             CurrentNode = root;
+            Set = new List<Node>(){root};
         }
 
         public void BuildTree(StreamReader sr)
@@ -54,102 +54,32 @@ namespace Spath
                 }
             }
         }
+    }
 
-        public List<Node> Search(StreamReader sr)
-        {
-            List<Node> result = new List<Node>();
-            result.Add(root);
-            List<string> predicats = new List<string>();
-            string identefier = "";
+    class Query{
+        string query {get;set;}
+        List<Node> set {get;set;}
 
+        public Query(StreamReader sr, Tree tree){
+            this.query = ReadQuery(sr);
+            this.set = new List<Node>(){tree.root};
+        }
+        
+        string ReadQuery(StreamReader sr){
+            StringBuilder sb = new StringBuilder();
             char ch = (char)sr.Read();
             while (sr.EndOfStream == false)
             {
-                ch = (char)sr.Read();
-                switch (ch)
-                {
-                    case ' ': break;
-                    case '\t': break;
-                    case '[':
-                        predicats.Add(AddPredicat(sr));
-                        break;
-                    case '/':
-                        Select(ref result, identefier);
-                        Filter(ref result, predicats);
-                        identefier = "";
-                        predicats.Clear();
-                        break;
-                    case '*':
-                        identefier = "*";
-                        break;
-                    case '.':
-                        identefier = "..";
-                        break;
-                    default:
-                        identefier += ch;
-                        break;
+                if (ch != ' ' && ch != '\t'){
+                    ch = (char)sr.Read();
+                    sb.Append(ch);
                 }
             }
+            return sb.ToString();
+        }
+
+        public List<Node> Run(){
             
-            return result;
-        }
-
-        private string AddPredicat(StreamReader sr)
-        {
-            string predicat = "";
-            char ch = (char)sr.Read();
-            while (ch != ']')
-            {
-                predicat += ch;
-                ch = (char)sr.Read();
-            }
-            return predicat;
-        }
-
-        private void Select(ref List<Node> result, string identefier)
-        {
-            List<Node> preResult = new List<Node>();
-            foreach (Node node in result)
-            {
-                if (identefier == "*")
-                {
-                    foreach (Node child in node.childs)
-                    {
-                        preResult.Add(child);
-                    }
-                }
-                else if (identefier == "..")
-                {
-                    if (!preResult.Contains(node.Parent!))
-                    {
-                        preResult.Add(node.Parent!);
-                    }
-                }
-                else
-                {
-                    foreach (Node child in node.childs)
-                    {
-                        if (child.data == identefier)
-                        {
-                            preResult.Add(child);
-                        }
-                    }
-                }
-            }
-            result = preResult;
-        }
-
-        private void Filter(ref List<Node> result, List<string> predicats)
-        {
-            List<Node> preResult = new List<Node>();
-            foreach (string predicat in predicats)
-            {
-                foreach (Node node in result)
-                {
-                    //TODO: Filter
-                }
-            }
-            result = preResult;
         }
     }
 
@@ -163,11 +93,12 @@ namespace Spath
 
             Tree tree = new Tree();
             tree.BuildTree(srData);
-            List<Node> result = tree.Search(srQuery);
+
+            Query query = new Query(srQuery, tree);
+            List<Node> result = query.Run();
+
             srQuery.Close();
             srData.Close();
-
-            
         }
     }
 }
