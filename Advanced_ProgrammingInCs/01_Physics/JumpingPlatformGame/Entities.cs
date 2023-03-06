@@ -1,16 +1,36 @@
-﻿using System.Drawing;
+using System;
+using System.Drawing;
 using GamePhysics;
 
 namespace JumpingPlatformGame {
 	class Entity {
 		public virtual Color Color => Color.Black;
+
+		public WorldPoint Location { get; internal set; }
 	}
 
-	class MovableEntity : Entity {
+	class WorldPoint
+	{
+		public Meter X;
+		public Meter Y;
 	}
+
+	class axis
+	{
+		public Meter LowerBound;
+		public Meter UpperBound;
+		public Speed Speed;
+	}
+
+	class MovableEntity : Entity
+	{
+		public axis Horizontal;
+
+    }
 
 	class MovableJumpingEntity : MovableEntity {
-	}
+		public axis Vertical;
+    }
 
 	class Joe : MovableEntity {
 		public override string ToString() => "Joe";
