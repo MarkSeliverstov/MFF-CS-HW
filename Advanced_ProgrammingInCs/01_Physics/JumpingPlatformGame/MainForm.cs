@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -88,6 +88,11 @@ namespace JumpingPlatformGame {
 	}
 
 	static class ControlExtensions {
+		public static void Update(this Entity ent, Second sec)
+		{
+
+		}
+
 		public static void SetLocation(this Control control, Entity entity, int worldHeight) {
 			control.Left = (int) entity.Location.X.Value - control.Width / 2;
 			control.Top = worldHeight - (int) entity.Location.Y.Value - control.Height / 2;
