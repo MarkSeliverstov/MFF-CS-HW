@@ -5,7 +5,6 @@ using GamePhysics;
 namespace JumpingPlatformGame {
 	class Entity {
 		public virtual Color Color => Color.Black;
-
 		public WorldPoint Location { get; internal set; }
 	}
 
@@ -15,7 +14,7 @@ namespace JumpingPlatformGame {
 		public Meter Y;
 	}
 
-	class axis
+	class Axis
 	{
 		public Meter LowerBound;
 		public Meter UpperBound;
@@ -24,12 +23,12 @@ namespace JumpingPlatformGame {
 
 	class MovableEntity : Entity
 	{
-		public axis Horizontal;
+		public Axis Horizontal = new Axis();
 
     }
 
 	class MovableJumpingEntity : MovableEntity {
-		public axis Vertical;
+		public Axis Vertical = new Axis();
     }
 
 	class Joe : MovableEntity {

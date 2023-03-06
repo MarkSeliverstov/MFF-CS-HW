@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace GamePhysics
 {
@@ -8,6 +9,12 @@ namespace GamePhysics
         public Meter(double value) => Value = value;
 
         public static Meter operator +(Meter a, Meter b) => new Meter(a.Value + b.Value);
+        public static Meter operator -(Meter a, Meter b) => new Meter(a.Value - b.Value);
+        public static bool operator ==(Meter a, Meter b) => a.Value == b.Value;
+        public static bool operator !=(Meter a, Meter b) => a.Value != b.Value;
+        public static bool operator >=(Meter a, Meter b) => a.Value >= b.Value;
+        public static bool operator <=(Meter a, Meter b) => a.Value <= b.Value;
+
         public static Speed operator /(Meter distance, Second sec) => new Speed(distance.Value / sec.Value);
     }
 
@@ -17,6 +24,9 @@ namespace GamePhysics
         public Speed(double value) => Value = value;
 
         public static Speed operator *(Speed speed, double factor) => new Speed(speed.Value * factor);
+        public static Meter operator *(Speed speed, Second sec) => new Meter(speed.Value * sec.Value);
+        public static bool operator >=(Speed a, Speed b) => a.Value >= b.Value;
+        public static bool operator <=(Speed a, Speed b) => a.Value <= b.Value;
     }
 
     public struct Second{
@@ -35,6 +45,7 @@ namespace GamePhysics
         public static Second Seconds(this int value) => new Second(value);
 
         public static Speed MeterPerSeconds(this double value) => new Speed(value);
+        public static Speed MeterPerSeconds(this int value) => new Speed(value);
     }
 
     class Program

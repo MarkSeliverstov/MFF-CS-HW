@@ -5,7 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using GamePhysics;
 
@@ -90,8 +90,42 @@ namespace JumpingPlatformGame {
 	static class ControlExtensions {
 		public static void Update(this Entity ent, Second sec)
 		{
+            if (ent is MovableEntity movableEntity)
+            {
+                var distanceX = movableEntity.Horizontal.Speed * sec;
+				if (movableEntity.Horizontal.UpperBound <= ent.Location.X + distanceX)
+				{
+					movableEntity.Horizontal.Speed *= -1;
+					distanceX = movableEntity.Horizontal.UpperBound - ent.Location.X;
+                }
+                if (movableEntity.Horizontal.LowerBound >= ent.Location.X + distanceX)
+                {
+                    movableEntity.Horizontal.Speed *= -1;
+                    distanceX = ent.Location.X - movableEntity.Horizontal.LowerBound;
+                }
+                ent.Location.X += distanceX;
+            }
 
-		}
+            if (ent is MovableJumpingEntity jumpingEntity)
+            {
+                var distanceY = jumpingEntity.Vertical.Speed * sec;
+                if (jumpingEntity.Vertical.UpperBound <= ent.Location.Y + distanceY)
+                {
+					jumpingEntity.Vertical.Speed *= -1;
+                    distanceY = ent.Location.Y - jumpingEntity.Vertical.UpperBound;
+					ent.Location.Y += distanceY;
+				}
+
+                if (jumpingEntity.Vertical.LowerBound <= ent.Location.Y + distanceY)
+                {
+					ent.Location.Y += distanceY;
+				}
+				else
+				{
+					ent.Location.Y = jumpingEntity.Vertical.LowerBound;
+                }
+            }
+        }
 
 		public static void SetLocation(this Control control, Entity entity, int worldHeight) {
 			control.Left = (int) entity.Location.X.Value - control.Width / 2;
