@@ -1,4 +1,5 @@
-﻿using MinimalisticUIFramework;
+﻿using Microsoft.VisualBasic;
+using MinimalisticUIFramework;
 
 Console.WriteLine("--- PART 1 (panels support) ---");
 Console.WriteLine();
