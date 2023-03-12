@@ -38,4 +38,3 @@ Label { Text = "Daisy (lat. Bellis perennis)" }
 Image { Url = "flower1.jpg", ZoomFactor = 0,75 } 
 } at 500, 0
 }
-
