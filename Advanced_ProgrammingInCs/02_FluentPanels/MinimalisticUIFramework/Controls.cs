@@ -68,48 +68,18 @@ namespace MinimalisticUIFramework {
 	public static class Placer{
 		// For StackPanel
 		public static T PlacedIn<T>(this T control, StackPanel stackPanel) where T : Control {
-			switch (control) {
-				case Image image:
-					stackPanel.AddChild(image);
-					return control;
-				case Label label:
-					stackPanel.AddChild(label);
-					return control;
-				case StackPanel stackPanel2:
-					stackPanel.AddChild(stackPanel2);
-					return control;
-				default:
-					throw new Exception("This type of control is not supported");
-			}
+			stackPanel.AddChild(control);
+			return control;
 		}
 
 		// For Canvas
 		public static Tuple<Canvas, T> PlacedIn<T>(this T control, Canvas canvas) where T : Control {
-			switch (control) {
-				case Image image: return new Tuple<Canvas, T>(canvas, control);
-				case Label label: return new Tuple<Canvas, T>(canvas, control);
-				case StackPanel stackPanel: return new Tuple<Canvas, T>(canvas, control);
-				default: throw new Exception("This type of control is not supported");
-			}
+			return new Tuple<Canvas, T>(canvas, control);
 		}
 
 		public static T At<T>(this Tuple<Canvas, T> tuple, int x, int y) where T : Control {
-			var position = new Point { X = x, Y = y };
-
-			switch (tuple.Item2) {
-				case Image image:
-					tuple.Item1.AddChild(image, position);
-					return tuple.Item2;
-				case Label label:
-					tuple.Item1.AddChild(label, position);
-					return tuple.Item2;
-				case StackPanel stackPanel:
-					tuple.Item1.AddChild(stackPanel, position);
-					return tuple.Item2;
-				default:
-					throw new Exception("This type of control is not supported");
-			}
+			tuple.Item1.AddChild(tuple.Item2, new Point { X = x, Y = y });
+			return tuple.Item2;
 		}
-
 	}
 }
