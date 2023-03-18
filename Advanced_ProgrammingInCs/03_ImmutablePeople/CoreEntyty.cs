@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace CoreEntities {
     public abstract class Person {
         public string FirstName { get; }
