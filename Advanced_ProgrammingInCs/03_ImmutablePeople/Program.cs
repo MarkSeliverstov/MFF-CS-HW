@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Entities;
+
+using CoreEntities;
+using MyEntities;
+using MyExtentions;
 
 namespace ImmutablePeople {
 	

@@ -9,14 +9,14 @@ Student Marie Pichova has password "zidle"
 Teacher Pavel Jezek has password "pohovka"
 
 +++ People:
-Student Pavel Rozek has password "pohovka"
+Student Pavel Rozek has password "lavice"
 Student Marie Pichova has password "zidle"
-Teacher Pavel Jezek has password "pohovka"
+Teacher Pavel Jezek has password "stul"
 
 +++ Just students:
-Student Pavel Rozek has password "pohovka"
+Student Pavel Rozek has password "lavice"
 Student Marie Pichova has password "zidle"
 
 +++ Updated students:
-Student Pavel Rozek has password "pohovka"
+Student Pavel Rozek has password "lavice"
 Student Marie Pichova has password "letadlo"
