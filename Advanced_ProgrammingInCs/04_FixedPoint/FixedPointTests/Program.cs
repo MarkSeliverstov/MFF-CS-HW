@@ -3,6 +3,7 @@
 {
     Console.WriteLine(">>> Fixed<byte, Dot3> >>>");
     Fixed<byte, Dot3> x1 = new(1.25);
+
     Console.WriteLine(x1.ToDouble());
 
     Fixed<byte, Dot3> x2 = new(3.5);
@@ -302,6 +303,9 @@ Console.WriteLine("++++++");
     var f1Sum = f1List.SumAll();
     Console.WriteLine(f1Sum);
 
+
+    // smth with List<Fixed<int, Dot4>> is not working
+    var a = new Fixed<int, Dot4>(1.1);
     var f2List = new List<Fixed<int, Dot4>> { new(1.1), new(2.2), new(3.3), new(4.4), new(0.125) };
     var f2Sum = f2List.SumAll();
     Console.WriteLine(f2Sum);
