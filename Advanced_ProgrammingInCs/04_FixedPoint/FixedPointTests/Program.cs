@@ -1,4 +1,5 @@
 ﻿using Cuni.Arithmetics.FixedPoint;
+using Dots;
 
 {
     Console.WriteLine(">>> Fixed<byte, Dot3> >>>");
