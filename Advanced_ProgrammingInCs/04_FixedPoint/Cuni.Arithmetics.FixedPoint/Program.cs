@@ -1,66 +1,52 @@
 using System;
 using System.Collections;
-using System.Data.SqlTypes;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+
+using Dots;
 
 namespace Cuni.Arithmetics.FixedPoint{
-    public interface IDot{
-        public int Value();
-    }
-
-    public struct Dot3: IDot{
-        public int Value() => 3;
-    }
-
-    public struct Dot4: IDot{
-        public int Value() => 4;
-    }
-
-    public struct Dot8 : IDot{
-        public int Value() => 8;
-    }
-
-    public struct Dot16: IDot{
-        public int Value() => 16;
-    }
-
-    public struct Dot24: IDot{
-        public int Value() => 24;
-    }
-
+    
     public struct Fixed<TBackingType, TPrecision>
         where TBackingType : struct, IComparable, IConvertible, IFormattable
         where TPrecision: struct, IDot
     {
-        int CapacityBits = Marshal.SizeOf<TBackingType>() * 8;
-        int countFracBit = new TPrecision().Value();
-        public BitArray bits = new BitArray(Marshal.SizeOf<TBackingType>() * 8);
+        int precision = new TPrecision().Value();
+        public BitArray capacity;
 
         public Fixed(double valueDouble){
-            this.bits.WriteIntPartBits(valueDouble, countFracBit);
-            this.bits.WriteFracPartBits(valueDouble, countFracBit);
+            precision = new TPrecision().Value();
+            this.capacity = new BitArray(Marshal.SizeOf(typeof(TBackingType)) * 8);
+
+            this.capacity.WriteIntPartBits(valueDouble, precision);
+            this.capacity.WriteFracPartBits(valueDouble, precision);
+        }
+
+        public Fixed(int valueInt){
+            precision = new TPrecision().Value();
+            this.capacity = new BitArray(Marshal.SizeOf(typeof(TBackingType)) * 8);
+
+            this.capacity.WriteIntPartBits(valueInt, precision);
         }
 
         public Fixed(BitArray array){
-            this.bits = array.Clone() as BitArray;
+            this.capacity = array.Clone() as BitArray;
         }
 
         public double ToDouble(){
             double intPart = 0;
             double fracPart = 0;
-            int len = this.bits.Length;
+            int len = this.capacity.Length;
             if (len > this.CapacityBits)
                 len = this.CapacityBits;
-            for (int i = countFracBit; i < len; i++){
-                if (bits[i]){
-                    intPart += Math.Pow(2, i - countFracBit);
+            for (int i = precision; i < len; i++){
+                if (capacity[i]){
+                    intPart += Math.Pow(2, i - precision);
                 }
             }
 
-            for (int i = 0; i < countFracBit; i++){
-                if (bits[countFracBit - i - 1]){
+            for (int i = 0; i < precision; i++){
+                if (capacity[precision - i - 1]){
                     fracPart += Math.Pow(2, -(i + 1));
                 }
             }
@@ -73,64 +59,64 @@ namespace Cuni.Arithmetics.FixedPoint{
         }
 
         public static Fixed<TBackingType, TPrecision> operator +(Fixed<TBackingType, TPrecision> x1, Fixed<TBackingType, TPrecision> x2){
-            BitArray result = x1.bits.Add(x2.bits);
+            BitArray result = x1.capacity.Add(x2.capacity);
             return new Fixed<TBackingType, TPrecision>(result);
         }
 
         public static Fixed<TBackingType, TPrecision> operator -(Fixed<TBackingType, TPrecision> x1, Fixed<TBackingType, TPrecision> x2){
-            byte[] bytes = new byte[x1.bits.Length / 8];
-            x1.bits.CopyTo(bytes, 0);
+            byte[] bytes = new byte[x1.capacity.Length / 8];
+            x1.capacity.CopyTo(bytes, 0);
             var result = new BigInteger(bytes);
 
-            bytes = new byte[x2.bits.Length / 8];
-            x2.bits.CopyTo(bytes, 0);
+            bytes = new byte[x2.capacity.Length / 8];
+            x2.capacity.CopyTo(bytes, 0);
             result -= new BigInteger(bytes);
 
             bytes = result.ToByteArray();
-            x1.bits = new BitArray(bytes);
+            x1.capacity = new BitArray(bytes);
 
-            return new Fixed<TBackingType, TPrecision>(x1.bits);
+            return new Fixed<TBackingType, TPrecision>(x1.capacity);
         }
 
         public static Fixed<TBackingType, TPrecision> operator *(Fixed<TBackingType, TPrecision> x1, Fixed<TBackingType, TPrecision> x2){
             byte[] bytes = new byte[x1.CapacityBits / 8];
-            x1.bits.CopyTo(bytes, 0);
+            x1.capacity.CopyTo(bytes, 0);
             var result = new BigInteger(bytes);
 
             bytes = new byte[x2.CapacityBits / 8];
-            x2.bits.CopyTo(bytes, 0);
+            x2.capacity.CopyTo(bytes, 0);
             result *= new BigInteger(bytes);
 
             bytes = result.ToByteArray();
-            x1.bits = new BitArray(bytes);
+            x1.capacity = new BitArray(bytes);
 
-            x1.bits.RightShift(x1.countFracBit);
+            x1.capacity.RightShift(x1.precision);
 
             // becouse tests are not correct
-            x1.bits.Length = x1.CapacityBits;
+            x1.capacity.Length = x1.CapacityBits;
 
-            return new Fixed<TBackingType, TPrecision>(x1.bits);
+            return new Fixed<TBackingType, TPrecision>(x1.capacity);
         }
 
         public static Fixed<TBackingType, TPrecision> operator /(Fixed<TBackingType, TPrecision> x1, Fixed<TBackingType, TPrecision> x2){
-            x1.bits.Length+=8;
-            x1.bits.LeftShift(x1.countFracBit);
-            byte[] bytes = new byte[x1.bits.Length / 8];
-            x1.bits.CopyTo(bytes, 0);
+            x1.capacity.Length+=8;
+            x1.capacity.LeftShift(x1.precision);
+            byte[] bytes = new byte[x1.capacity.Length / 8];
+            x1.capacity.CopyTo(bytes, 0);
 
             var result = new BigInteger(bytes);
 
-            x2.bits.Length+=8;
-            bytes = new byte[x2.bits.Length / 8];
-            x2.bits.CopyTo(bytes, 0);
+            x2.capacity.Length+=8;
+            bytes = new byte[x2.capacity.Length / 8];
+            x2.capacity.CopyTo(bytes, 0);
 
             result /= new BigInteger(bytes);
 
             bytes = result.ToByteArray();
-            x1.bits = new BitArray(bytes);
+            x1.capacity = new BitArray(bytes);
 
 
-            return new Fixed<TBackingType, TPrecision>(x1.bits);
+            return new Fixed<TBackingType, TPrecision>(x1.capacity);
         }
 
         public Fixed<int, T1> To<T1>()
