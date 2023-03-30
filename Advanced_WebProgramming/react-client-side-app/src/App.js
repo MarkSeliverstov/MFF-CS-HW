@@ -1,5 +1,6 @@
 import './App.css';
 import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { Form, Button, InputGroup, Container, Nav, Navbar } from 'react-bootstrap';
 
 function NavBar(props) {
