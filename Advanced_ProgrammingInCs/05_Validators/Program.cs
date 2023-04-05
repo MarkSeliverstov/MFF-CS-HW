@@ -1,4 +1,4 @@
-﻿/* TODO: any modifiers */ class ValidationError
+﻿record class ValidationError
 {
     public string Reason { get; init; }
 
@@ -6,8 +6,6 @@
     {
         Reason = reason;
     }
-
-    /* TODO: any additional members */
 }
 
 record Order
@@ -20,32 +18,156 @@ record Order
 
 record SuperOrder : Order;
 
+/* ========== My Validation ========== */
+
+interface IValidator<in T>
+{
+    List<ValidationError> Validate(T value);
+}
+
+abstract class Validator<T>: IValidator<T>
+{
+    public abstract List<ValidationError> Validate(T value);
+
+    public List<ValidationError> Validate<TValue>(TValue value, Validator<TValue> RequiredValidator, 
+                                                  params Validator<TValue>[] OtherValidators){
+        var errors = new List<ValidationError>();
+        errors.AddRange(RequiredValidator.Validate(value));
+
+        foreach (var validator in OtherValidators)
+        {
+            errors.AddRange(validator.Validate(value));
+        }
+        return errors;
+    }
+}
+
+class NonBlankStringValidator : Validator<string>
+{
+    public override List<ValidationError> Validate(string value)
+    {
+        var allErrors = new List<ValidationError>();
+        if (value.Trim().Length == 0)
+        {
+            allErrors.Add(new ValidationError($"\"{value}\" is empty or just whitespaces."));
+        }
+        return allErrors;
+    }
+}
+
+class RangeValidator<T> : Validator<T> where T : IComparable<T>
+{
+    public T Min { get; init; }
+    public T Max { get; init; }
+
+    public override List<ValidationError> Validate(T value)
+    {
+        var allErrors = new List<ValidationError>();
+        if (value.CompareTo(Min) < 0)
+        {
+            allErrors.Add(new ValidationError($"{value} is less than minimum {Min}."));
+        }
+        else if (value.CompareTo(Max) > 0)
+        {
+            allErrors.Add(new ValidationError($"{value} is greater than maximum {Max}."));
+        }
+        return allErrors;
+    }
+}
+
+class StringLengthValidator : Validator<string>
+{
+    RangeValidator<int> validator { get; init; }
+
+    public StringLengthValidator(RangeValidator<int> validator)
+    {
+        this.validator = validator;
+    }
+
+    public override List<ValidationError> Validate(string value)
+    {
+        var errors = validator.Validate(value.Length);
+        if (errors.Count > 0)
+        {
+            errors = errors.Select(e => new ValidationError($"\"{value}\" length {e.Reason}")).ToList();
+        }
+        return errors;
+    }
+}
+
+class NotNullValidator : Validator<object?>
+{
+    public override List<ValidationError> Validate(object? value)
+    {
+        var errors = new List<ValidationError>();
+
+        if (value == null){
+            errors.Add(new ValidationError("\"\" is null."));
+        }
+
+        return errors;
+    }
+}
+
+/* ========== Me Extantions ========== */
+
+static class ValidatorExtensions
+{
+    public static void Print(this List<ValidationError> errors)
+    {
+        if (errors.Count() == 0)
+        {
+            Console.WriteLine("  >>> Validation successful >>>");
+        }
+        else
+        {
+            Console.WriteLine("  >>> Validation failed >>>");
+            foreach (var e in errors)
+            {
+                Console.WriteLine($"    > {e.Reason}");
+            }
+        }
+        Console.WriteLine();
+    }
+}
+
+static class Create{
+    public static RangeValidator<T> RangeValidator<T>(T min, T max) where T : IComparable<T> => new RangeValidator<T> { Min = min, Max = max };
+    public static StringLengthValidator StringLengthValidator(int min, int max) => new StringLengthValidator(RangeValidator(min, max));
+    public static NotNullValidator NotNullValidator() => new NotNullValidator();
+    public static NonBlankStringValidator NonBlankStringValidatorr() => new NonBlankStringValidator();
+}
+
+
+/* =================================== */
+
 class OrderValidator : Validator<Order>
 {
-    // TODO:
-    // ... Validate(Order value) ... {
-    //	var allErrors = new List<ValidationError>();
-    //	allErrors.AddRange(Validate(value.Amount, new RangeValidator<int> { Min = 1, Max = 10 }));
-    //	allErrors.AddRange(Validate(value.Id, new NonBlankStringValidator(), new StringLengthValidator(new RangeValidator<int> { Min = 1, Max = 8 })));
-    //	allErrors.AddRange(Validate(value.TotalPrice, new RangeValidator<decimal> { Min = 0.01M, Max = 999.99M }));
-    //	allErrors.AddRange(Validate(value.Comment, new NotNullValidator()));
-    //	return allErrors;
-    // }
+    public override List<ValidationError> Validate(Order value){
+    	var allErrors = new List<ValidationError>();
+    	allErrors.AddRange(Validate(value.Amount, new RangeValidator<int> { Min = 1, Max = 10 }));
+    	allErrors.AddRange(Validate(value.Id, new NonBlankStringValidator(), new StringLengthValidator(new RangeValidator<int> { Min = 1, Max = 8 })));
+    	allErrors.AddRange(Validate(value.TotalPrice, new RangeValidator<decimal> { Min = 0.01M, Max = 999.99M }));
+    	allErrors.AddRange(Validate(value.Comment, new NotNullValidator()));
+    	return allErrors;
+    }
 }
 
 class AdvancedOrderValidator : Validator<Order>
 {
-    // TODO:
-    // ... Validate(Order value) ... {
-    //	  Similar syntax as for OrderValidator, but more compact:
-    //	  + without need to specify inferable types <int>, <decimal> ...
-    //	  + without need for new ...
-    // }
+    public override List<ValidationError> Validate(Order value){
+    	var allErrors = new List<ValidationError>();
+    	allErrors.AddRange(Validate(value.Amount, Create.RangeValidator(1,10)));
+    	allErrors.AddRange(Validate(value.Id, Create.NonBlankStringValidatorr(), Create.StringLengthValidator(1,8)));
+    	allErrors.AddRange(Validate(value.TotalPrice, Create.RangeValidator(0.01M, 999.99M)));
+    	allErrors.AddRange(Validate(value.Comment, Create.NotNullValidator()));
+    	return allErrors;
+    }
 }
 
 class Program
 {
-    static void ValidateSuperOrders(IEnumerable<SuperOrder> orders, /* TODO: Validator for SuperOrder */ validator)
+    static void ValidateSuperOrders(IEnumerable<SuperOrder> orders, IValidator<SuperOrder> validator)
     {
         foreach (var o in orders)
         {
@@ -53,7 +175,7 @@ class Program
         }
     }
 
-    static void ValidateAll<T>(IEnumerable<T> orders, /* TODO: Validator for T */ validator)
+    static void ValidateAll<T>(IEnumerable<T> orders, IValidator<T> validator)
     {
         foreach (var o in orders)
         {
