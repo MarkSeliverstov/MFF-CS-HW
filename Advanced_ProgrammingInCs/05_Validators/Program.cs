@@ -1,4 +1,6 @@
-﻿record class ValidationError
+﻿using System.Collections;
+
+record class ValidationError
 {
     public string Reason { get; init; }
 
@@ -22,15 +24,15 @@ record SuperOrder : Order;
 
 interface IValidator<in T>
 {
-    List<ValidationError> Validate(T value);
+    // Return list of errors
+    IEnumerable<ValidationError> Validate(T value);
 }
 
 abstract class Validator<T>: IValidator<T>
 {
-    public abstract List<ValidationError> Validate(T value);
+    public abstract IEnumerable<ValidationError> Validate(T value);
 
-    public List<ValidationError> Validate<TValue>(TValue value, Validator<TValue> RequiredValidator, 
-                                                  params Validator<TValue>[] OtherValidators){
+    public IEnumerable<ValidationError> Validate<TValue>(TValue value, Validator<TValue> RequiredValidator, params Validator<TValue>[] OtherValidators){
         var errors = new List<ValidationError>();
         errors.AddRange(RequiredValidator.Validate(value));
 
@@ -38,13 +40,14 @@ abstract class Validator<T>: IValidator<T>
         {
             errors.AddRange(validator.Validate(value));
         }
+
         return errors;
     }
 }
 
 class NonBlankStringValidator : Validator<string>
 {
-    public override List<ValidationError> Validate(string value)
+    public override IEnumerable<ValidationError> Validate(string value)
     {
         var allErrors = new List<ValidationError>();
         if (value.Trim().Length == 0)
@@ -57,10 +60,10 @@ class NonBlankStringValidator : Validator<string>
 
 class RangeValidator<T> : Validator<T> where T : IComparable<T>
 {
-    public T Min { get; init; }
-    public T Max { get; init; }
+    public required T Min { get; init; }
+    public required T Max { get; init; }
 
-    public override List<ValidationError> Validate(T value)
+    public override IEnumerable<ValidationError> Validate(T value)
     {
         var allErrors = new List<ValidationError>();
         if (value.CompareTo(Min) < 0)
@@ -77,17 +80,17 @@ class RangeValidator<T> : Validator<T> where T : IComparable<T>
 
 class StringLengthValidator : Validator<string>
 {
-    RangeValidator<int> validator { get; init; }
+    Validator<int> validator { get; init; }
 
-    public StringLengthValidator(RangeValidator<int> validator)
+    public StringLengthValidator(Validator<int> validator)
     {
         this.validator = validator;
     }
 
-    public override List<ValidationError> Validate(string value)
+    public override IEnumerable<ValidationError> Validate(string value)
     {
         var errors = validator.Validate(value.Length);
-        if (errors.Count > 0)
+        if (errors.Count() > 0)
         {
             errors = errors.Select(e => new ValidationError($"\"{value}\" length {e.Reason}")).ToList();
         }
@@ -97,7 +100,7 @@ class StringLengthValidator : Validator<string>
 
 class NotNullValidator : Validator<object?>
 {
-    public override List<ValidationError> Validate(object? value)
+    public override IEnumerable<ValidationError> Validate(object? value)
     {
         var errors = new List<ValidationError>();
 
@@ -113,7 +116,7 @@ class NotNullValidator : Validator<object?>
 
 static class ValidatorExtensions
 {
-    public static void Print(this List<ValidationError> errors)
+    public static void Print(this IEnumerable<ValidationError> errors)
     {
         if (errors.Count() == 0)
         {
