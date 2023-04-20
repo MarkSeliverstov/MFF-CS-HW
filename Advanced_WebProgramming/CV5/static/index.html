@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Frontend</title>
+</head>
+
+<body>
+  
+  <h1>Students management application</h1>
+
+  <section>
+    <h2>Students</h2>
+    <ul id="student-list"></li>
+  </section>
+
+  <section>
+    <h2>Create new students</h2>
+    <form name="new-student" onsubmit="onCreateStudent(event)">
+      <label>Name:
+        <input name="name">
+      </label>
+    </form>
+    <br/>
+    <button onclick="onCreateStudent(event)">Create student</button>
+  </section>
+
+  <script>
+    (async function init() {
+      loadData();
+    })();
+
+    async function loadData() {
+      const students = await fetchData();
+      const parent = document.getElementById("student-list");
+      for (const student of students) {
+        const listItem = document.createElement("li");
+        const text = student.name + " " + (student.group ?? "");
+        // Lazy developer here ...
+        listItem.innerHTML = `
+        <div> 
+          <span>${text}</span> 
+          <button onclick="onDeleteStudent(event, "${student.id}")">Delete</button> 
+        </div>`;
+        parent.appendChild(listItem);
+      }
+    }
+
+    async function fetchData() {
+      return fetch("./api/v1/student").then(response => response.json());
+    }
+
+    function onDeleteStudent(event, identifier) {
+      const element = event.target.parentElement.parentElement;
+      fetch("./api/v1/student/"  + identifier, {
+        "method": "DELETE"
+      }).then((response) => {
+        if (response.ok) {
+          element.remove();
+        }
+      });
+    }
+
+    function onCreateStudent(event) {
+      event.preventDefault();
+      const form = document.forms.namedItem("new-student");
+      name = form["name"].value;
+      fetch("./api/v1/student", {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ "name": name }),
+      }).then(reloadData);
+    }
+
+    function reloadData() {
+      document.getElementById("student-list").replaceChildren([]);
+      loadData();
+    }
+
+  </script>
+</body>
+
+</html>
