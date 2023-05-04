@@ -1,14 +1,20 @@
-﻿public class PostRoutesHandler : ISimplisticRoutesHandler {
-    public void RegisterRoutes(RouteMap routeMap) {
+﻿public class PostRoutesHandler : ISimplisticRoutesHandler
+{
+    public void RegisterRoutes(RouteMap routeMap)
+    {
         Console.WriteLine("+++ PostRoutesHandler.RegisterRoutes() called.");
 
         // TODO: Has to compile without any changes !!!
-        // routeMap.Map("/services/PostCode/getDataAsJson", GetPostCodesByCityAndStreet);
+        routeMap.Map("/services/PostCode/getDataAsJson", GetPostCodesByCityAndStreet);
+        // path = /services/PostCode/getDataAsJson?city=Praha&street=Patkova
     }
 
-    public IReadOnlyList<PostCodeItem> GetPostCodesByCityAndStreet(string cityOrPart, string nameStreet) {
-        return cityOrPart switch {
-            "Praha" => nameStreet switch {
+    public IReadOnlyList<PostCodeItem> GetPostCodesByCityAndStreet(string cityOrPart, string nameStreet)
+    {
+        return cityOrPart switch
+        {
+            "Praha" => nameStreet switch
+            {
                 "Patkova" => new[] {
                         new PostCodeItem("Praha", "Pátkova", "Praha 82", "18200", "2136/3"),
                     },
@@ -18,7 +24,8 @@
                     },
                 _ => Array.Empty<PostCodeItem>()
             },
-            "Sokolov" => nameStreet switch {
+            "Sokolov" => nameStreet switch
+            {
                 "Karla Hynka Machy" => new[] {
                     new PostCodeItem("Sokolov", "Karla Hynka Máchy", "Sokolov 1", "35601", "1100"),
                     new PostCodeItem("Sokolov", "Karla Hynka Máchy", "Sokolov 1", "35601", "2230"),
