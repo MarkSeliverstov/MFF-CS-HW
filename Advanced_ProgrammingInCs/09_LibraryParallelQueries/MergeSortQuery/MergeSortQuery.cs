@@ -4,6 +4,7 @@ using System.Text;
 
 using System.Threading;
 using System.IO;
+using System.Linq;
 
 using LibraryModel;
 
@@ -14,8 +15,24 @@ namespace MergeSortQuery {
 
 		public List<Copy> ExecuteQuery() {
 			if (ThreadCount == 0) throw new InvalidOperationException("Threads property not set and default value 0 is not valid.");
+			
+			/* 	My code here:
+				We have N threads, so we need to sort the selected list of copies helps merge sort algorith with N threads.
+				Steps:
+				1. Filter the list of copies to get only the copies that are on loan and are on shelf ending with A - Q letters.	
+				2. Sorted by:
+					2.1. DueDate
+					2.2. Last name
+					2.3. First name
+					2.4. Shelf
+					2.5. Copy ID
+			*/
+			var selectedCopies = Library.Copies.Where(
+								 c => c.OnLoan != null && 
+								 Regex.IsMatch(c.Book.Shelf, @"\w+[A-Q]$")
+								 ).ToList();
 
-			return new List<Copy>();
+			return selectedCopies.ToList();
 		}
 	}
 
