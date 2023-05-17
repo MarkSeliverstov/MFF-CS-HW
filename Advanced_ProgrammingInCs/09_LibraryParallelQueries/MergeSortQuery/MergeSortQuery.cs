@@ -12,12 +12,13 @@ namespace MergeSortQuery {
 	class MergeSortQuery {
 		public Library Library { get; set; }
 		public int ThreadCount { get; set; }
+		private int SortThreadCount { get; set; }
+        private int MergeThreadCount { get; set; }
 
-		public List<Copy> ExecuteQuery() {
+        public List<Copy> ExecuteQuery() {
 			if (ThreadCount == 0) throw new InvalidOperationException("Threads property not set and default value 0 is not valid.");
-			
-			/* 	My code here:
-				We have N threads, so we need to sort the selected list of copies helps merge sort algorith with N threads.
+
+            /*	We have N threads, so we need to sort the selected list of copies helps merge sort algorith with N threads.
 				Steps:
 				1. Filter the list of copies to get only the copies that are on loan and are on shelf ending with A - Q letters.	
 				2. Sorted by:
@@ -27,13 +28,71 @@ namespace MergeSortQuery {
 					2.4. Shelf
 					2.5. Copy ID
 			*/
-			var selectedCopies = Library.Copies.Where(
-								 c => c.OnLoan != null && 
-								 Regex.IsMatch(c.Book.Shelf, @"\w+[A-Q]$")
-								 ).ToList();
-
-			return selectedCopies.ToList();
+            MergeThreadCount = ThreadCount;
+			SortThreadCount = ThreadCount;
+			return MergeSortThreads(FilterCopies(Library.Copies));
 		}
+
+		// My code here =========================
+
+		private List<Copy> MergeSortThreads(List<Copy> copies)
+		{
+
+
+        }
+
+
+
+        private List<Copy> Merge(List<Copy> left, List<Copy> right)
+		{
+			var result = new List<Copy>();
+			var il = 0;
+			var ir = 0;
+
+			while (il < left.Count && ir < right.Count)
+			{
+				var addingCopy = CompareCopies(left[il], right[ir]) == -1 ? 
+								 left[il++] : right[ir++];
+
+				result.Add(addingCopy);
+			}
+			result.AddRange(right.Skip(ir));
+			result.AddRange(left.Skip(il));
+			return result;
+		}
+
+		private int CompareCopies(Copy left, Copy right) =>
+					(left.OnLoan.DueDate,
+					left.OnLoan.Client.LastName,
+					left.OnLoan.Client.FirstName,
+					left.Book.Shelf,
+					left.Id)
+					.CompareTo((
+					left.OnLoan.DueDate,
+					left.OnLoan.Client.LastName,
+					left.OnLoan.Client.FirstName,
+					left.Book.Shelf,
+					left.Id));
+
+        private List<Copy> SortCopies(List<Copy> l)
+		{
+			var source = from c in l
+						 let client = c.OnLoan.Client
+                         orderby c.OnLoan.DueDate, client.LastName, client.FirstName, c.Book.Shelf, c.Id
+                         select c;
+			return source.ToList();
+        }
+
+		private List<Copy> FilterCopies(List<Copy> l)
+		{
+            var source = from c in Library.Copies
+                         where c.State == CopyState.OnLoan &&
+						 c.Book.Shelf[2] >= 'A' && c.Book.Shelf[2] <= 'Q'
+						 select c;
+			return source.ToList();
+        }
+
+		//=================================
 	}
 
 	class ResultVisualizer {
