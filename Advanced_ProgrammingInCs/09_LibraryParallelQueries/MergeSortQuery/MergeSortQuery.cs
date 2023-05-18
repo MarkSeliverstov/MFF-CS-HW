@@ -35,13 +35,44 @@ namespace MergeSortQuery {
 
 		// My code here =========================
 
-		private List<Copy> MergeSortThreads(List<Copy> copies)
+		private List<Copy> MergeSortThreads(List<Copy> list, int threadCount = ThreadCount)
 		{
+			int count = list.Count;
 
+            if (count <= 1)
+                return list;
 
+            int mid = count / 2;
+
+            if (threadCount > 1)
+            {
+                List<int> left = null, right = null;
+
+                Thread leftThread = new Thread(() =>
+                {
+                    left = MergeSortThread(list.GetRange(0, mid), threadCount / 2);
+                });
+
+                Thread rightThread = new Thread(() =>
+                {
+                    right = MergeSortThread(list.GetRange(mid, count - mid), threadCount - threadCount / 2);
+                });
+
+                leftThread.Start();
+                rightThread.Start();
+
+                leftThread.Join();
+                rightThread.Join();
+
+                return Merge(left, right);
+            }
+            else
+            {
+                List<int> left = MergeSortThread(list.GetRange(0, mid), threadCount);
+                List<int> right = MergeSortThread(list.GetRange(mid, count - mid), threadCount);
+                return Merge(left, right);
+            }
         }
-
-
 
         private List<Copy> Merge(List<Copy> left, List<Copy> right)
 		{
@@ -51,9 +82,7 @@ namespace MergeSortQuery {
 
 			while (il < left.Count && ir < right.Count)
 			{
-				var addingCopy = CompareCopies(left[il], right[ir]) == -1 ? 
-								 left[il++] : right[ir++];
-
+				var addingCopy = CompareCopies(left[il], right[ir]) == -1 ? left[il++] : right[ir++];
 				result.Add(addingCopy);
 			}
 			result.AddRange(right.Skip(ir));
