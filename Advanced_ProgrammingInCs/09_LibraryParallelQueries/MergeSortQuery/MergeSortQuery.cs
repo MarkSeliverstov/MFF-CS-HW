@@ -30,12 +30,12 @@ namespace MergeSortQuery {
 			*/
             MergeThreadCount = ThreadCount;
 			SortThreadCount = ThreadCount;
-			return MergeSortThreads(FilterCopies(Library.Copies));
+			return MergeSortThread(FilterCopies(Library.Copies), ThreadCount);
 		}
 
 		// My code here =========================
 
-		private List<Copy> MergeSortThreads(List<Copy> list, int threadCount = ThreadCount)
+		private List<Copy> MergeSortThread(List<Copy> list, int threadCount)
 		{
 			int count = list.Count;
 
@@ -44,19 +44,12 @@ namespace MergeSortQuery {
 
             int mid = count / 2;
 
+			// Separating list by threads count
             if (threadCount > 1)
             {
-                List<int> left = null, right = null;
-
-                Thread leftThread = new Thread(() =>
-                {
-                    left = MergeSortThread(list.GetRange(0, mid), threadCount / 2);
-                });
-
-                Thread rightThread = new Thread(() =>
-                {
-                    right = MergeSortThread(list.GetRange(mid, count - mid), threadCount - threadCount / 2);
-                });
+				List<Copy> left = new List<Copy>(), right = new List<Copy>();
+				Thread leftThread = new Thread(() => left = MergeSortThread(list.GetRange(0, mid), threadCount / 2));
+                Thread rightThread = new Thread(() => right = MergeSortThread(list.GetRange(mid, count - mid), threadCount - threadCount / 2));
 
                 leftThread.Start();
                 rightThread.Start();
@@ -68,8 +61,9 @@ namespace MergeSortQuery {
             }
             else
             {
-                List<int> left = MergeSortThread(list.GetRange(0, mid), threadCount);
-                List<int> right = MergeSortThread(list.GetRange(mid, count - mid), threadCount);
+				// Each Thread Sorting self part
+				List<Copy> left = SortCopies(list.GetRange(0, mid));
+                List<Copy> right = SortCopies(list.GetRange(mid, count - mid));
                 return Merge(left, right);
             }
         }
@@ -97,11 +91,11 @@ namespace MergeSortQuery {
 					left.Book.Shelf,
 					left.Id)
 					.CompareTo((
-					left.OnLoan.DueDate,
-					left.OnLoan.Client.LastName,
-					left.OnLoan.Client.FirstName,
-					left.Book.Shelf,
-					left.Id));
+					right.OnLoan.DueDate,
+					right.OnLoan.Client.LastName,
+					right.OnLoan.Client.FirstName,
+					right.Book.Shelf,
+					right.Id));
 
         private List<Copy> SortCopies(List<Copy> l)
 		{
