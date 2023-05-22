@@ -85,17 +85,17 @@ namespace MergeSortQuery {
 		}
 
 		private int CompareCopies(Copy left, Copy right) =>
-					(left.OnLoan.DueDate,
-					left.OnLoan.Client.LastName,
-					left.OnLoan.Client.FirstName,
-					left.Book.Shelf,
-					left.Id)
-					.CompareTo((
-					right.OnLoan.DueDate,
-					right.OnLoan.Client.LastName,
-					right.OnLoan.Client.FirstName,
-					right.Book.Shelf,
-					right.Id));
+			(left.OnLoan.DueDate,
+			left.OnLoan.Client.LastName,
+			left.OnLoan.Client.FirstName,
+			left.Book.Shelf,
+			left.Id)
+			.CompareTo((
+			right.OnLoan.DueDate,
+			right.OnLoan.Client.LastName,
+			right.OnLoan.Client.FirstName,
+			right.Book.Shelf,
+			right.Id));
 
         private List<Copy> SortCopies(List<Copy> l)
 		{
